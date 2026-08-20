@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: owpl-central-relay
+    runtime: python
+    buildCommand: ""
+    startCommand: python central_relay_server.py
+    healthCheckPath: /health

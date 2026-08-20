@@ -1,0 +1,357 @@
+Open World Physics Lab — Multiplayer Rooms Update
+
+PASS — JavaScript syntax
+PASS — HUD close buttons
+PASS — Three public rooms
+PASS — Private room UI
+PASS — PeerJS client
+PASS — Host-or-join public room
+PASS — Remote state synchronization
+PASS — Remote avatars
+PASS — Room leave
+PASS — Static-site HTTP smoke test
+
+PeerJS Cloud transport availability is external to this static build. The implementation uses the current PeerJS client and its default Cloud signaling service.
+
+
+Grenade-to-grenade blast push update
+PASS — JavaScript syntax
+PASS — Directional grenade blast push
+PASS — Only live grenades are pushed
+PASS — Exploding grenade skips itself
+PASS — Distance falloff
+PASS — Directional vector
+PASS — Existing grenade bounce retained
+PASS — Existing debris retained
+PASS — Blast direction math
+PASS — Static website smoke test
+
+
+Destructible trees + better weapon visuals
+PASS — JavaScript syntax
+PASS — Tree HP/destruction
+PASS — Tree debris
+PASS — Blast destroys trees
+PASS — Ray hits tree
+PASS — Grenade bounces on tree
+PASS — RPG hits tree
+PASS — RPG rename
+PASS — Shotgun rename
+PASS — Sniper rename
+PASS — Better carbine model
+PASS — Better RPG model
+PASS — Better shotgun model
+PASS — Better sniper model
+PASS — Grenade push retained
+PASS — Multiplayer retained
+PASS — Static website smoke test
+
+
+Visual realism + casing + 12-shot carbine cycle update
+PASS — JavaScript syntax
+PASS — Carbine casing ejection
+PASS — Shotgun shell ejection
+PASS — Different casing visuals
+PASS — 12-shot carbine cycle
+PASS — Brief carbine pause
+PASS — AUTO mode respects cycle pause
+PASS — Cycle HUD
+PASS — More detailed carbine
+PASS — More detailed shotgun
+PASS — More detailed sniper
+PASS — More detailed RPG
+PASS — Destructible trees retained
+PASS — Grenade push retained
+PASS — Multiplayer retained
+PASS — Static website smoke test
+
+
+Recoil + weapon model realism pass
+PASS — JavaScript syntax
+PASS — Visual recoil spring
+PASS — Carbine recoil
+PASS — Shotgun recoil
+PASS — Sniper recoil
+PASS — RPG recoil
+PASS — Camera recoil affects aim view
+PASS — Viewmodel kick
+PASS — Carbine model pass
+PASS — Shotgun model pass
+PASS — Sniper model pass
+PASS — RPG model pass
+PASS — Carbine casings retained
+PASS — Shotgun shell ejection retained
+PASS — 12-shot carbine pause retained
+PASS — Grenade push retained
+PASS — Destructible trees retained
+PASS — Multiplayer retained
+PASS — Static website smoke test
+
+Recoil/model dimensions are intentionally fictional game values rather than real weapon specifications.
+
+
+First-person eye-height + model V3 update
+PASS — JavaScript syntax
+PASS — First-person eye height raised
+PASS — Third-person aim target raised
+PASS — Third-person weapon origin raised
+PASS — First-person weapon raised
+PASS — First-person weapon moved inward
+PASS — Carbine V3 model detail
+PASS — Shotgun V3 model detail
+PASS — Sniper V3 model detail
+PASS — RPG V3 model detail
+PASS — Recoil retained
+PASS — Carbine casings retained
+PASS — Shotgun shells retained
+PASS — 12-shot carbine pause retained
+PASS — Destructible trees retained
+PASS — Grenade push retained
+PASS — Multiplayer retained
+PASS — Eye-height alignment math
+PASS — Static website smoke test
+
+First-person camera is now aligned to character eye height. Weapon model geometry remains fictional game art.
+
+
+PvP + SMG + AK-47 + mouse-wheel update
+PASS — JavaScript syntax
+PASS — SMG replaces Carbine
+PASS — AK-47 replaces Physics Cannon
+PASS — Mouse-wheel switching
+PASS — PvP hitboxes
+PASS — PvP relay
+PASS — PvP local damage
+PASS — PvP health bars
+PASS — PvP blast damage
+PASS — SMG AUTO retained
+PASS — SMG 12-shot pause retained
+PASS — SMG model
+PASS — AK-47 model
+PASS — Grenade push retained
+PASS — Trees retained
+PASS — First-person fix retained
+PASS — Physics Cannon code removed
+PASS — Static website smoke test
+
+PvP uses the existing player-hosted browser room. Weapon behavior remains fictional game tuning.
+
+
+Smaller first-person viewmodel update
+PASS — JavaScript syntax
+PASS — Per-weapon FPS scaling
+PASS — SMG smaller
+PASS — Shotgun smaller
+PASS — AK-47 smaller
+PASS — Sniper smaller
+PASS — RPG smaller
+PASS — Lower/right placement
+PASS — Farther camera placement
+PASS — Reduced weapon kick
+PASS — Muzzle position updated
+PASS — Casing position updated
+PASS — PvP retained
+PASS — Wheel switching retained
+PASS — SMG retained
+PASS — AK-47 retained
+PASS — Trees retained
+PASS — Grenade push retained
+PASS — Static website smoke test
+
+Third-person weapon size is unchanged; only first-person display scale/placement was reduced.
+
+
+Network compatibility / PWA update — 2026.08.13-compat1
+PASS — JavaScript syntax: game + service worker
+PASS — Initial PeerJS CDN dependency removed
+PASS — PeerJS loads on demand
+PASS — Solo path has no PeerJS dependency
+PASS — PWA manifest linked
+PASS — Service worker created
+PASS — Core offline cache
+PASS — Network-first updates
+PASS — Offline navigation fallback
+PASS — PeerJS runtime cache
+PASS — Connection diagnostics UI
+PASS — WebRTC diagnostic
+PASS — Room service diagnostic
+PASS — PWA registration
+PASS — PvP retained
+PASS — Weapon wheel retained
+PASS — Smaller viewmodels retained
+PASS — Destructible trees retained
+PASS — Grenade push retained
+PASS — Static website/PWA smoke test
+
+Live connectivity on the destination network was not claimed. Static compatibility code, cache files, diagnostics, and deployment files were validated.
+
+
+Focus-aim update
+PASS — JavaScript syntax
+PASS — RMB focus aim
+PASS — Smooth aim blend
+PASS — Per-weapon aim FOV
+PASS — Aim sensitivity reduction
+PASS — Aim sway reduction
+PASS — Viewmodel centers while aiming
+PASS — Crosshair tightens
+PASS — Sniper scope retained
+PASS — No target snap
+PASS — PvP retained
+PASS — Mouse wheel retained
+PASS — PWA retained
+PASS — Static website smoke test
+
+
+Clearer-screen aim layout update
+PASS — JavaScript syntax
+PASS — Weapons scaled down again
+PASS — Extra shrink while aiming
+PASS — Hip placement moved right
+PASS — Hip placement moved lower
+PASS — Hip placement moved farther
+PASS — Aim pose less centered
+PASS — Reduced kick travel
+PASS — Muzzle repositioned
+PASS — Casing repositioned
+PASS — Aim system retained
+PASS — PvP retained
+PASS — PWA retained
+PASS — Static website smoke test
+
+
+Fast arena / RIVALS-style movement update
+PASS — JavaScript syntax
+PASS — Ctrl/C slide controls
+PASS — Slide movement
+PASS — Slide-jump momentum
+PASS — Jump buffering
+PASS — Coyote time
+PASS — Air strafing
+PASS — Slope momentum
+PASS — Crouch camera
+PASS — Landing camera dip
+PASS — Movement FOV
+PASS — Movement HUD
+PASS — Remote slide posture
+PASS — Aim system retained
+PASS — PvP retained
+PASS — PWA retained
+PASS — Static website smoke test
+
+
+Third-person + crouch/slide animation update
+PASS — JavaScript syntax
+PASS — Third-person RMB aiming
+PASS — Third-person aim FOV
+PASS — Crosshair remains visible in 3P sniper
+PASS — Over-shoulder camera
+PASS — Camera moves closer while aiming
+PASS — Crosshair-converged firing
+PASS — Gun pose follows aim
+PASS — Crouch animation
+PASS — Slide animation
+PASS — Arms reach weapon
+PASS — Remote crouch/slide animations
+PASS — Remote lowered hitboxes
+PASS — Movement retained
+PASS — PvP retained
+PASS — Aim system retained
+PASS — PWA retained
+PASS — Updated control hint
+PASS — Static website smoke test
+
+
+Imported KSR-29 GLB sniper update
+PASS — JavaScript syntax
+PASS — GLB asset packaged
+PASS — UV shader support
+PASS — Textured mesh path
+PASS — GLB loader
+PASS — Embedded texture decode
+PASS — First-person imported sniper
+PASS — Third-person imported sniper
+PASS — Procedural fallback
+PASS — Aim system retained
+PASS — Movement retained
+PASS — PvP retained
+PASS — PWA caches GLB
+PASS — Startup loads model
+PASS — GLB binary/header verification
+PASS — Static website + GLB asset smoke test
+
+Live interactive WebGL visual alignment was not claimed; syntax, loader, asset, PWA, and static serving were validated.
+
+
+KSR-29 runtime cleanup + right-side third-person camera
+PASS — JavaScript syntax
+PASS — Build bumped
+PASS — Runtime sniper cleanup helper present
+PASS — Cleanup removes extra parts
+PASS — Cleanup lowers scope cluster
+PASS — Loader uses cleaned mesh
+PASS — Third-person camera side swapped
+PASS — First-person sniper anchor adjusted
+PASS — Third-person sniper anchor adjusted
+PASS — Aim retained
+PASS — Movement retained
+PASS — PWA asset retained
+PASS — Static website + asset smoke test
+
+
+Video sniper fix 2026-08-15
+PASS — clean GLB direct loader
+PASS — old cleanup bypassed
+PASS — scope viewmodel hidden
+PASS — hip sniper uses viewmodel base
+PASS — left side 3p kept
+PASS — start launcher retained
+PASS — PWA clean asset cached
+PASS — cache bumped
+PASS — JS syntax / GLB integrity / static serving
+
+
+School multiplayer compatibility update
+PASS — JavaScript syntax
+PASS — Two PeerJS sources
+PASS — Fallback loader
+PASS — Room service diagnostic
+PASS — Network error labels
+PASS — Common Peer creation
+PASS — Longer timeout
+PASS — Service worker multi-source cache
+PASS — Optional config packaged
+PASS — Config loads before game
+PASS — START_GAME retained
+PASS — Build bumped
+PASS — Static website smoke test
+Live testing on the school network was not possible.
+
+Built-in LAN relay multiplayer update — 2026.08.20-lan-relay-mp1
+PASS — JavaScript syntax
+PASS — Python LAN server syntax
+PASS — LAN relay status endpoint
+PASS — LAN CREATE and JOIN room flow
+PASS — Two-client state snapshot synchronization
+PASS — LAN PvP hit event relay
+PASS — Empty/uninitialized client states filtered safely
+PASS — Existing PeerJS/WebRTC multiplayer retained as fallback
+PASS — Sniper asset retained
+PASS — START_GAME.bat launches LAN relay
+PASS — START_LOCAL_ONLY.bat retained
+NOTE — Actual school Wi-Fi client-to-client access cannot be tested here; Wi-Fi client isolation or firewall rules can still prevent LAN access.
+
+
+Central HTTPS relay build
+PASS — central detection
+PASS — central rooms
+PASS — central sync
+PASS — central pvp
+PASS — central priority
+PASS — LAN fallback
+PASS — Peer fallback
+PASS — server included
+PASS — URL setter
+PASS — build id
+PASS — two-client central relay movement/state/PvP integration test
+Public hosting and the school network were not tested here.
