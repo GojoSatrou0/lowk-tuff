@@ -123,9 +123,7 @@ Mouse capture is refused by this embedded browser. The implemented fallback was 
 
 ## Limits
 
-- The user confirmed the public site is a static Netlify upload with no backend deployed. Version 1.6.1 includes the required build/proxy support and setup guide, but no hosted Node backend or live Netlify redeployment has been provisioned. Live signup and multiplayer remain unavailable until that hosting step is completed. Tests cover the local code and origin/proxy contract, not a live Netlify-to-backend deployment.
-
-- No public internet deployment was made, and the user's blocked network has not been tested.
+- Version 1.7 is deployed publicly on Netlify, Alwaysdata Free and Neon Free. The user's blocked network has not been tested.
 - Rooms hold exactly two players. No teams, matchmaking, or career stats. Accounts and guest wallets require Neon or a retained local server disk. Guest access also requires the browser token.
 - Server owns game outcomes but uses current authoritative positions for hits; no historical lag compensation.
 - Polling is more latent than WebSocket, particularly at high RTT. Local prediction is corrected to server state; it is not a full rollback/replay netcode implementation.
@@ -139,5 +137,11 @@ Mouse capture is refused by this embedded browser. The implemented fallback was 
 
 - All 76 tests passed after the free-database and startup changes.
 - Hosted Neon validation passed on an isolated branch: email login, purchases, loadout, coins, server-store replacement and logout persistence.
-- Production deployment and live Netlify checks are pending; earlier deployment limits above describe the previous release.
+- October 1, 2026: Alwaysdata Free production deployment completed at `https://mikudayo.alwaysdata.net/`. Production schema migration succeeded. Netlify deploy `6abe584b44b3fa36a92cac68` is published at `https://velocity-arena.netlify.app/`.
+- Both public health endpoints returned game JSON with durable database storage and email accounts enabled.
+- Live Netlify HTTP checks passed using one generated fixture account: email signup, 100 starting coins, secure/HttpOnly/SameSite cookie, weapon purchase, loadout, logout/revocation and email login.
+- Two independent live clients created/joined/readied a room and observed authoritative movement. A third player was rejected. A direct secure WebSocket client saw the same two-player room. The temporary room was closed after verification.
+- After an actual Alwaysdata site restart, the fixture account's email login, remaining coins, purchased weapon and equipped loadout persisted.
+- Backend private source, account files and `.env` paths returned 404. Credentials and test fixture files are excluded from source archives and Netlify uploads.
+- The live browser rendered the game, `SERVER ONLINE`, and `Game server connected` in the multiplayer dialog. Full live multiplayer behavior was tested through independent HTTP/WebSocket clients; prior browser gameplay checks are documented above.
 

@@ -1,10 +1,12 @@
 # Connect Netlify to the game server
 
-**Current deployment choice:** use [Northflank Sandbox](NORTHFLANK.md) for a host without a card. Render required card verification on this account, so no Render service was created. The Netlify build steps below work with either backend host. The Render section remains an optional configuration reference.
+**Live as of October 1, 2026:** https://velocity-arena.netlify.app/ connects to the [Alwaysdata Free backend](https://mikudayo.alwaysdata.net/) and Neon Free database. Netlify production deploy: `6abe584b44b3fa36a92cac68`. Email accounts and two-player gameplay were verified through the public Netlify API. No card or paid service was used. See [Alwaysdata configuration](ALWAYSDATA.md).
 
-The frontend is https://velocity-arena.netlify.app/. After deployment, Netlify will serve game files and proxy `/api` to one Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across server restarts. No paid disk is required. The public backend and proxy connection are still pending.
+Netlify serves game files and proxies `/api` to one Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across server restarts. No paid disk is required. A production restart test confirmed that email login, purchased weapons, coins and loadout persist. Netlify uses HTTPS polling; the backend's direct address also supports secure WebSockets.
 
 ## Optional Render backend reference
+
+Render and Northflank requested card verification for this account and were not used. The following is an optional reference for a different account; the deployed configuration is documented in [ALWAYSDATA.md](ALWAYSDATA.md).
 
 Use the `codex/velocity-arena` branch in https://github.com/GojoSatrou0/lowk-tuff. The original game remains on `main`. Exclude `.env*`, `data/`, logs, `.npm-cache/`, `node_modules/`, `test-output/`, `dist/` and the preserved starter archive from source uploads.
 
@@ -26,7 +28,7 @@ The server refuses to start if the required database is missing. It waits for da
 ## Update Netlify
 
 1. Open the backend `/health` and check JSON with `name: "Velocity Arena"`, `emailAccounts: true`, and `storage: "database"`.
-2. Run `BUILD_NETLIFY.bat` and enter the backend HTTPS URL, or set `ARENA_SERVER_URL` and run `npm run build:netlify`.
+2. Run `BUILD_NETLIFY.bat` and enter `https://mikudayo.alwaysdata.net`, or set `ARENA_SERVER_URL` to that address and run `npm run build:netlify`.
 3. Upload the generated **dist** folder to the existing Netlify site's deployment area. This contains public frontend files and proxy rules only.
 4. Verify `https://velocity-arena.netlify.app/api/status` returns JSON. Check email signup, logout/login, saved coins, and a two-player room.
 
@@ -36,7 +38,7 @@ Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirec
 
 ## Free-plan limits
 
-[Render Free](https://render.com/docs/free) sleeps after 15 minutes without traffic and may take about a minute to wake. The game retries only read-only startup checks, up to two minutes. It never automatically replays purchases or registration. Free Play stays available while waiting. Active rooms end on server restart; committed accounts survive in Neon.
+Alwaysdata's verified Free account has 1 GB disk, 256 MB RAM and 0.25 CPU; it is configured with idle time 0 for WebSockets. The game retries only read-only startup checks, up to two minutes, if the backend is temporarily unavailable. It never automatically replays purchases or registration. Free Play stays available while waiting. Active rooms end on server restart; committed accounts survive in Neon.
 
 Free quotas can suspend the game or database until reset. Keep all services on free plans and do not enable automatic paid upgrades or paid overages. This setup does not promise unlimited traffic or continuous availability. Neon Free has storage and compute quotas; inspect usage in its dashboard. Do not use Render's expiring free Postgres or a paid persistent disk for this configuration.
 

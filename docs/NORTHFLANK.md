@@ -1,6 +1,6 @@
-# Hosting without a card
+# Northflank deployment reference
 
-Render requested a card and a temporary verification hold for this account, even on its free plan. No Render service was created. Northflank's [current guide](https://northflank.com/blog/how-to-deploy-vibe-coded-v0-apps-to-production) advertises a card-free Sandbox with two services. The account is signed in, but the public backend is not live yet. The dashboard currently defaults to pay-as-you-go; select Developer Sandbox before creating any projects or services.
+**Not used for this deployment.** On October 1, 2026, the team was switched to **Developer Sandbox (Free)** and an empty free project was created in London. The service creation page still required a payment card for account verification. No service was created and no payment details were entered. Render also required a card. The game was successfully deployed on [Alwaysdata Free](ALWAYSDATA.md), without a card.
 
 The game source and passing tests are published on [codex/velocity-arena](https://github.com/GojoSatrou0/lowk-tuff/tree/codex/velocity-arena). The Neon Free database is ready. Local account files and private settings were excluded from publication.
 
