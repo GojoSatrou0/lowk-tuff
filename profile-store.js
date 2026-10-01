@@ -4,7 +4,7 @@ import {randomBytes,createHash,scrypt,timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import {domainToASCII} from 'node:url';
 import isEmail from 'validator/lib/isEmail.js';
-import {freshProfile,buyWeapon,equipLoadout,STARTING_COINS} from './src/economy.js';
+import {freshProfile,buyWeapon,equipLoadout,migrateLoadout,STARTING_COINS} from './src/economy.js';
 
 const hash=token=>createHash('sha256').update(token).digest('hex');
 const validToken=token=>typeof token==='string'&&/^[a-f0-9]{64}$/.test(token);
@@ -41,15 +41,16 @@ export class ProfileStore {
     }
   }
   restore(saved){
-    if(![1,2,3].includes(saved?.version)||!saved.profiles)throw Error('Unsupported profile database; keep a backup before migrating.');
+    if(![1,2,3,4].includes(saved?.version)||!saved.profiles)throw Error('Unsupported profile database; keep a backup before migrating.');
     saved=structuredClone(saved);
     this.profiles=saved.profiles;this.accounts=Object.assign(Object.create(null),saved.accounts);this.claimed=saved.claimed||{};this.authSessions=saved.authSessions||{};this.emails=new Map();
     for(const [key,account]of Object.entries(this.accounts))if(account.email){const normalized=normalizeEmail(account.email);if(this.emails.has(normalized.emailKey))throw Error('Duplicate account email in database. Restore a valid backup.');account.emailKey=normalized.emailKey;this.emails.set(normalized.emailKey,key);}
-    let changed=saved.version!==3;
+    let changed=saved.version!==4;
     for(const p of Object.values(this.profiles))if(p.revision===0&&p.coins===300&&p.earned===0&&JSON.stringify(p.owned)==='[0,1,2,3,4]'){p.coins=STARTING_COINS;p.revision++;changed=true;}
+    for(const p of Object.values(this.profiles))if(migrateLoadout(p))changed=true;
     return changed;
   }
-  serialize(){return {version:3,profiles:this.profiles,accounts:this.accounts,claimed:this.claimed,authSessions:this.authSessions};}
+  serialize(){return {version:4,profiles:this.profiles,accounts:this.accounts,claimed:this.claimed,authSessions:this.authSessions};}
   save(){if(!this.file)return;const temp=this.file+'.tmp';writeFileSync(temp,JSON.stringify(this.serialize()),{mode:0o600});renameSync(temp,this.file);}
   async flush(){}
   assertHealthy(){}

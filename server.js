@@ -107,7 +107,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const url=new URL(req.url,'http://localhost'),ip=req.socket.remoteAddress;
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
     try{
-      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:7,release:'1.10.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
+      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:8,loadoutSlots:4,throwables:true,release:'1.11.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
       if(url.pathname==='/api'||url.pathname==='/api/auth'){
         if(req.method!=='POST'){response(res,405,{error:'Use POST'});return;}
         if(!safeOrigin(req)){response(res,403,{error:'Origin not allowed'});return;}

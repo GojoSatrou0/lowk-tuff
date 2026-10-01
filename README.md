@@ -24,6 +24,7 @@ npm start
 
 ## What is included
 
+- **Four-slot update (1.11):** Slot 1 primary, slot 2 secondary, slot 3 melee, slot 4 utility. Free Sidekick Pistol and Frag Grenade; Molotov costs 100 coins. Grenades bounce with a 2.1-second fuse (two per round); Molotovs break into 5.5-second fire patches (one per round). Left-click to throw. R cannot refill throwables; rounds and the Free Play reset refill them. Katana parries both; fire and explosions respect cover and can hurt their owner. Grapple stays on Q. Saved wallets migrate automatically, preserving purchases, coins and accounts.
 - **Arsenal update (1.10):** Kestrel Crossbow (325 coins), Sentinel DMR (250), Whisper Pistol (125), and Impact Hammer (225). The crossbow fires a fast bolt without drawing and automatically recocks; the DMR and suppressed pistol fire once per click; the hammer knocks back surviving targets and participates in speed clashes. Each has an armory icon, first-person model and firing animation. Katana parries the three new ranged weapons; the hammer bypasses its guard.
 - **Overhead beam grappling (1.9.2):** the narrow overhead beam and its supports on Foundry and Afterlight are solid grapple targets in practice and multiplayer. Aim at the beam within 30 m and hold Q; release to let go. You can land on its top. The visible beam dimensions are also used for collision and server ray checks.
 - **Motion update (1.9.1):** sharper weapon recoil with smooth recovery, drawn weapon transitions, sprint and guard poses, timed reloads, moving magazines, and improved melee swings. The sniper now shows optical recoil, a bolt cycle, shell ejection, and a ready indicator while scoped; its central aiming reticle stays fixed. Reduce Weapon Motion removes the added movement and flash while keeping the ready indicator.
@@ -38,8 +39,8 @@ npm start
 - Material lighting, baked directional shadows, fog, detailed surfaces, distant scenery, muzzle flashes, tracers, hit markers, and generated sound effects.
 - Batched static geometry; Performance/Balanced/High quality settings.
 - Sprint, crouch, slide, momentum-carrying slide-jumps, coyote time, and one double jump.
-- **19 original weapons:** five free starters plus an unlockable burst rifle, revolver, dual pistols, bow, rocket launcher, katana, minigun, flamethrower, Shorty, scythe, crossbow, marksman rifle, silenced pistol, and hammer.
-- A coin wallet, round/match rewards, permanent weapon unlocks, and five customizable weapon slots. Coins are earned through play; there are no real-money purchases.
+- **22 weapons and utilities:** seven free starters plus an unlockable burst rifle, revolver, dual pistols, bow, rocket launcher, katana, minigun, flamethrower, Shorty, scythe, crossbow, marksman rifle, silenced pistol, hammer, and Molotov.
+- A coin wallet, round/match rewards, permanent weapon unlocks, and four slots with fixed categories. Coins are earned through play; there are no real-money purchases.
 - Email/password accounts with public usernames, registration, sign-in, sign-out, and saved progress across devices on the same game server. Existing username accounts continue to work and can add an email. Guests can still play without an account.
 - Traveling arrows with gravity and aim-to-charge, three-shot bursts, rockets with cover-aware splash/self-damage and blast-jumping, and katana sprinting.
 - Katana parries, scythe dashes, minigun spin-up, and a cover-aware flame cone.
@@ -78,14 +79,14 @@ See [search-engine setup](docs/SEARCH.md) for the free Google Search Console ste
 | Draw bow | Hold right mouse to charge, then left-click to release |
 | Katana parry / scythe dash | Right mouse or F |
 | Reload | R |
-| Switch loadout slot | 1–5 or mouse wheel |
+| Switch loadout slot | 1–4 or mouse wheel |
 | Pause / release mouse | Esc |
 
 Solo pauses in its menu. **Online matches continue while menus are open.** If a browser or embedded preview refuses mouse capture, a fallback button appears: use arrow keys or right-drag to look. A normal desktop browser with mouse capture is the intended FPS experience. Touch controls and gamepad controls are not implemented.
 
 ## Free Play
 
-Select any map in the lobby and click **Free Play**. You spawn immediately with your saved five-weapon loadout. Practice movement, ramps, aiming, firing, reloads, melee, and equipped abilities without opponents or a time limit. Health stays full, including after rocket jumps. Magazine sizes and reload timings work normally.
+Select any map in the lobby and click **Free Play**. You spawn immediately with your saved four-slot loadout. Practice movement, ramps, aiming, firing, reloads, melee, and equipped abilities without opponents or a time limit. Health stays full, including after rocket jumps. Magazine sizes and reload timings work normally.
 
 Press **Esc** to pause, open settings, leave, or choose **Reset Position & Ammo**. Reset returns you to spawn, restores all ammo, clears active projectiles and ability cooldowns, and keeps your selected weapon. Leave and select another map to change arenas.
 
@@ -112,7 +113,7 @@ Changes save automatically in this browser for this server address and work in s
 
 ## Coins and the armory
 
-New wallets start with **100 coins**. Untouched wallets from the 300-coin version are adjusted to 100; wallets with earned coins, purchases, or equipment changes retain their progress. Open **Armory** or the gold coin counter, unlock a weapon, select one of the five slots, and click **Equip in slot**. Equipping a weapon already in another slot swaps the two. Leave your room before changing equipment. Each profile can occupy one room at a time.
+New wallets start with **100 coins**. Untouched wallets from the 300-coin version are adjusted to 100; wallets with earned coins, purchases, or equipment changes retain their progress. Open **Armory** or the gold coin counter, unlock a weapon, select the matching slot, and click **Equip in slot**. The armory shows items for that category. Old kits keep the first equipped weapon in each category; other unlocked weapons remain owned. Leave your room before changing equipment. Each profile can occupy one room at a time.
 
 | Reward | Coins |
 | --- | ---: |
