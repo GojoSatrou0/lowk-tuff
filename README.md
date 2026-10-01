@@ -50,6 +50,16 @@ This is an original movement arena inspired by fast duel games. It does not incl
 
 ## Controls
 
+### Momentum and melee clashes (1.8)
+
+Speed is now part of combat. Two nearby, facing melee swings can clash during a 0.12-second windup. The server compares actual horizontal speed at contact. A lead of at least 1 m/s wins the clash and stuns the slower player for 0.75 seconds; closer speeds repel both players with a short recovery. A clash cancels both hits, and the winner can follow up sooner. Stun blocks movement, attacks, weapon switching and abilities, but leaves the camera controllable. Blade, katana and scythe all participate. Walls, range and facing are checked.
+
+Slide-jumps retain momentum in the air and air-strafing can build speed. Slides preserve existing momentum instead of resetting it to a fixed value. Fast movement uses collision substeps and a 32 m/s simulation limit. The speed HUD highlights 16+ m/s; it does not guarantee a win against a faster rival. Sharp ground turns and ADS reduce momentum. No extra damage is added just for moving quickly.
+
+Katana parry still blocks bullets, arrows and flames; rockets and all melee bypass its guard. Swinging against another melee swing creates a clash instead. New feedback shows clash speeds, result, recovery, sparks and opponent stun markers. The solo bot equips its blade when a melee-equipped player approaches, allowing clash practice.
+
+See [search-engine setup](docs/SEARCH.md) for the free Google Search Console steps. Search appearance and ranking are controlled by Google.
+
 | Action | Control |
 | --- | --- |
 | Move | WASD |
@@ -76,7 +86,7 @@ Free Play runs locally in your browser. It creates no multiplayer room and earns
 
 ## Blade attacks
 
-The Momentum Blade is a close-range melee weapon: select its loadout slot (5 in the starter kit) and left-click for a slash. Each click performs one attack with a 0.45-second cooldown and 2.8-unit reach. It consumes no ammo and cannot shoot projectiles or damage a distant player. Solid cover blocks its hit check.
+The Momentum Blade is a close-range melee weapon: select its loadout slot (5 in the starter kit) and left-click for a slash. Each click performs one attack with a 0.12-second windup, 0.45-second cooldown and 2.8-unit reach. It consumes no ammo and cannot shoot projectiles or damage a distant player. Solid cover blocks its hit check.
 
 The blade uses alternating diagonal cuts and a soft whoosh, with no gunshot, bullet tracer, muzzle flash, or gun recoil. Its new model has a tapered, beveled steel blade, finger guard, ribbed grip, fasteners, and pommel; other players see the model and swing too. Katana and scythe attacks also no longer use gunfire effects.
 

@@ -2,9 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#111c23"><meta name="description" content="Velocity Arena — a fast, first-to-five arena FPS. Slide, double jump, and own the high ground.">
-  <title>Velocity Arena · Move with intent.</title>
+  <meta name="theme-color" content="#111c23"><meta name="description" content="Play Velocity Arena, a free online browser FPS. Race through 1v1 duels, chain slide-jumps, parry shots and win melee clashes with speed. First to five wins.">
+  <title>Velocity Arena — Free Online FPS &amp; Multiplayer Duels</title>
+  <link rel="canonical" href="https://velocity-arena.netlify.app/">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="Velocity Arena">
+  <meta property="og:title" content="Velocity Arena — Free Online FPS">
+  <meta property="og:description" content="Speed wins the clash. Play free first-to-five duels, parry shots, unlock weapons, and practice your movement in your browser.">
+  <meta property="og:url" content="https://velocity-arena.netlify.app/">
+  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="Velocity Arena — Free Online FPS">
+  <meta name="twitter:description" content="Speed wins the clash. Free browser FPS with private 1v1 duels, parries, coins and movement practice.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Velocity Arena","url":"https://velocity-arena.netlify.app/"},{"@type":"VideoGame","name":"Velocity Arena","url":"https://velocity-arena.netlify.app/","description":"A free browser FPS with first-to-five multiplayer duels, momentum movement, melee clashes and katana parries.","genre":["First-person shooter","Action"],"gamePlatform":"Web browser","playMode":["SinglePlayer","MultiPlayer"],"isAccessibleForFree":true}]}</script>
   <link rel="icon" href="app-icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="assets/momentum.css">
 </head>
 <body>
   <canvas id="world" tabindex="-1" aria-label="Velocity Arena 3D game"></canvas>
@@ -17,9 +27,9 @@
     </header>
     <div id="play-view" class="play-view">
       <section class="hero">
-        <div class="eyebrow"><span></span> THE MOVEMENT-FIRST ARENA</div>
+        <div class="eyebrow"><span></span> VELOCITY ARENA / THE MOMENTUM UPDATE</div>
         <h1>STAY QUICK.<br><em>HIT FIRST.</em></h1>
-        <p>Find your angle. Chain your movement.<br>Five rounds to prove it.</p>
+        <p>Build speed. Win the clash.<br>A free browser FPS. Five rounds to prove it.</p>
         <div class="mode-pills"><span>1V1 DUELS</span><i></i><span>FIRST TO 5</span><i></i><span>NO DOWNLOAD</span></div>
         <div class="play-actions"><button id="solo" class="button primary"><span>ENTER THE ARENA<small>SOLO VS. BOT</small></span><b>↗</b></button><button id="friends" class="button secondary"><span>PLAY WITH A FRIEND<small>PRIVATE ONLINE DUEL</small></span><b>＋</b></button></div>
         <button id="freeplay" class="button freeplay-button"><span>FREE PLAY<small>NO BOTS · UNLIMITED PRACTICE</small></span><b>↗</b></button>
@@ -27,6 +37,7 @@
       </section>
       <aside class="scene-label"><span>LIVE ARENA PREVIEW</span><strong id="preview-name">THE FOUNDRY</strong><small id="preview-subtitle">INDUSTRIAL / BALANCED</small><div class="scene-line"></div><span class="scene-number" id="preview-index">01 / 03</span></aside>
       <section class="map-section"><div class="section-heading"><h2>CHOOSE YOUR GROUND <span>03 MAPS</span></h2><span>DIFFERENT ROUTES. SAME STAKES.</span></div><div class="map-grid" id="map-grid"></div></section>
+      <details class="arena-guide"><summary>HOW TO PLAY VELOCITY ARENA <span>CONTROLS · CLASHES · MULTIPLAYER</span></summary><div><section><h2>A free online movement FPS</h2><p>Play private 1v1 duels on three arenas. Create a room, share its code, and both ready up. The first player to win five rounds wins the match. Sign in to save earned coins, unlocked weapons and your loadout, or play as a guest.</p></section><section><h2>Speed wins a melee clash</h2><p>Sprint with Shift, slide with C or Ctrl, then jump to carry your momentum. Air-strafe to change your route. When two nearby, facing players swing melee weapons within 0.12 seconds, their attacks clash. A lead of at least 1 m/s wins and stuns the slower player for 0.75 seconds. Close ties repel both players.</p></section><section><h2>Parry, practice, improve</h2><p>With the katana, press F or right mouse to guard against bullets, arrows and flames. Rockets and melee bypass the guard. Use Free Play to practice without bots, or face ECHO in solo. WASD moves, Space jumps and double-jumps, left mouse attacks, R reloads, and 1–5 selects weapons. Desktop keyboard and mouse recommended.</p></section></div></details>
       <footer><span><i class="online-dot"></i> BUILT FOR THE NEXT ROUND.</span><span>SLIDE <b>C</b> <i> / </i> DOUBLE JUMP <b>SPACE ×2</b> <i> / </i> AIM <b>RMB</b></span><span>VOL. 01 <i>—</i> ARENA EXPANSION</span></footer>
     </div>
     <section id="armory-view" class="armory-view" hidden><div class="eyebrow">EARN YOUR NEXT FAVORITE.</div><div class="armory-title"><h1>THE ARMORY<span data-weapon-count>15</span></h1><div class="shop-wallet"><small id="wallet-state">CONNECTING WALLET</small><strong>◈ <span data-wallet>100</span></strong><span>COINS</span></div></div><p>Win rounds. Stack coins. Build your five-weapon kit.</p><div class="earn-strip"><b id="starting-coins">100 COINS TO START</b><span id="reward-rules"></span><small>Earn in solo & online matches. No real money.</small></div><div class="loadout-heading"><h2>YOUR LOADOUT</h2><span>SELECT A SLOT, THEN EQUIP A WEAPON BELOW.</span></div><div class="loadout-slots" id="loadout-slots"></div><div id="weapon-grid" class="weapon-grid"></div><button class="button primary" id="armory-back">BACK TO PLAY <b>↗</b></button></section>
@@ -41,7 +52,10 @@
     <div id="round-banner" class="round-banner" hidden><span id="banner-kicker">GET READY</span><h2 id="banner-title">3</h2><p id="banner-note">Find your next angle.</p></div>
     <div class="hud-bottom"><div class="health"><div><span>VITALS</span><strong id="health-value">100</strong><b>＋</b></div><div class="health-track"><i id="health-bar"></i></div><small id="movement-state">READY TO MOVE</small></div><div class="weapon-belt" id="weapon-belt"></div><div class="ammo"><span id="weapon-name">V-24 CARBINE</span><div><strong id="ammo-value">24</strong><small id="ammo-max">/ 24</small></div><span id="reload-label">RELOAD <b>R</b></span></div></div>
     <div id="ability" class="ability" hidden><span id="ability-name">KATANA PARRY</span><strong id="ability-state">READY · RMB / F</strong><div><i id="ability-fill"></i></div><small id="ability-note">ROCKETS & MELEE BYPASS</small></div>
-    <div id="speed" class="speed"><span>VELOCITY</span><strong>0.0</strong><small>M/S</small></div>
+    <div id="speed" class="speed"><span id="speed-tier">BUILD MOMENTUM</span><div><strong>0.0</strong><small>M/S</small></div><div class="speed-track"><i id="speed-fill"></i></div><small class="speed-tip">FASTER SWINGS WIN CLASHES</small></div>
+    <div id="clash-notice" class="clash-notice" hidden role="status"><span id="clash-label">CLASH</span><strong id="clash-speeds"></strong><small id="clash-note"></small></div>
+    <div id="stun-status" class="stun-status" hidden><strong>STUNNED</strong><span id="stun-time"></span><div><i id="stun-fill"></i></div></div>
+    <div id="stun-vignette" aria-hidden="true" hidden></div>
     <div id="combat-feed" class="combat-feed"></div>
   </section>
   <div id="pause" class="overlay" hidden><section class="dialog pause-dialog"><div class="eyebrow">TAKE A BREATH</div><h2>BACK IN A MOMENT.</h2><p id="pause-note">Click resume to capture your mouse.</p><button id="resume" class="button primary">RESUME <b>↗</b></button><button id="pause-settings" class="button secondary">AIM & SETTINGS</button><button id="freeplay-reset" class="button secondary" hidden>RESET POSITION & AMMO <b>↻</b></button><button id="leave" class="text-button">LEAVE MATCH</button><div class="controls"><span><b>WASD</b> Move</span><span><b>SHIFT</b> Sprint</span><span><b>C / CTRL</b> Slide</span><span><b>SPACE ×2</b> Double jump</span><span><b>RMB</b> Aim</span><span><b>RMB / F</b> Katana parry / scythe dash</span><span><b>R</b> Reload</span><span><b>1–5 / WHEEL</b> Weapons</span><span><b>ESC</b> Menu</span></div></section></div>

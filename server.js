@@ -107,7 +107,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const url=new URL(req.url,'http://localhost'),ip=req.socket.remoteAddress;
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
     try{
-      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:6,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
+      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:7,release:'1.8.0',speedClashes:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
       if(url.pathname==='/api'||url.pathname==='/api/auth'){
         if(req.method!=='POST'){response(res,405,{error:'Use POST'});return;}
         if(!safeOrigin(req)){response(res,403,{error:'Origin not allowed'});return;}
@@ -123,9 +123,9 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
       if(req.method!=='GET'&&req.method!=='HEAD'){response(res,405,{error:'Method not allowed'});return;}
       let relative=decodeURIComponent(url.pathname).replace(/^\/+/, '')||'index.html';
       // Only public game files are exposed; server, tests, docs, and starter stay private.
-      if(!/^(index\.html|styles\.css|app-icon\.svg|manifest\.webmanifest|src\/[a-z-]+\.js|assets\/[a-zA-Z0-9_.-]+)$/.test(relative)){response(res,404,{error:'Not found'});return;}
+      if(!/^(index\.html|styles\.css|app-icon\.svg|manifest\.webmanifest|robots\.txt|sitemap\.xml|src\/[a-z-]+\.js|assets\/[a-zA-Z0-9_.-]+)$/.test(relative)){response(res,404,{error:'Not found'});return;}
       const file=path.join(ROOT,relative);await stat(file);
-      const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.webmanifest':'application/manifest+json','.glb':'model/gltf-binary'}[path.extname(file)]||'application/octet-stream';
+      const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.txt':'text/plain; charset=utf-8','.xml':'application/xml; charset=utf-8','.webmanifest':'application/manifest+json','.glb':'model/gltf-binary'}[path.extname(file)]||'application/octet-stream';
       res.writeHead(200,{'Content-Type':mime,'Cache-Control':'no-cache','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; media-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"});
       res.end(req.method==='HEAD'?undefined:await readFile(file));
     }catch(err){res.removeHeader('Set-Cookie');response(res,err.status||(err.code==='ENOENT'?404:400),{error:err.message});}

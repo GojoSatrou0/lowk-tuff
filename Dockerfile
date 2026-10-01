@@ -2,7 +2,7 @@ FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY server.js profile-store.js index.html styles.css app-icon.svg manifest.webmanifest ./
+COPY server.js profile-store.js index.html styles.css app-icon.svg manifest.webmanifest robots.txt sitemap.xml ./
 COPY src ./src
 COPY assets ./assets
 COPY database ./database
