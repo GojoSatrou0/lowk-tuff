@@ -12,7 +12,7 @@ export function resetTraining(m,{clearStats=false}={}){
   if(clearStats)Object.assign(t,{attempts:0,successes:0,streak:0,best:0});
   for(const p of m.players){resetPlayer(p,mapById(m.map));p.cooldown=0;p.weapon=p.loadout[0];p.p=[-12,0,p.id==='you'?8:0];p.yaw=p.id==='you'?0:Math.PI;}
   Object.assign(t,{clock:0,fired:false,result:null,resultAge:0,cue:'GET READY',revision:t.revision+1});
-  m.events=[];m.projectiles=[];t.cursor=m.eventSeq;
+  m.events=[];m.projectiles=[];m.hazards=[];t.cursor=m.eventSeq;
 }
 export function toggleTrainingPace(m){if(m.training?.kind!=='stun')return;m.training.charging=!m.training.charging;resetTraining(m);}
 function result(t,success,label,detail){t.attempts++;t.successes+=Number(success);t.streak=success?t.streak+1:0;t.best=Math.max(t.best,t.streak);t.result={success,label,detail};t.resultAge=0;}

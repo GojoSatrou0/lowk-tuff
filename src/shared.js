@@ -26,7 +26,17 @@ export const WEAPONS = [
   { name: 'Whisper Pistol', short: 'SILENCED', type: 'semi', ammo: 14, damage: 22, head: 1.8, rate: .18, reload: 1.3, range: 65, spread: .018, ads: 62, color: '#d7a7cd', price: 125, model: 'silenced', suppressed: true, recoil: .5, recoilDuration: .2, soundPitch: 240, description: 'A quiet suppressed sidearm. Small muzzle flash, low recoil, and quick reloads; click once per shot.' },
   { name: 'Impact Hammer', short: 'HAMMER', type: 'semi', ammo: -1, damage: 72, head: 1, rate: .9, reload: 0, range: 3.6, spread: 0, ads: 85, color: '#ffc676', price: 225, model: 'hammer', sprint: 11, knockback: 9, soundPitch: 160, description: 'A heavy swinging hammer that knocks rivals back. Breaks through katana guard and joins speed-based melee clashes.' },
 ];
-export const DEFAULT_LOADOUT = [0,1,2,3,4];
+WEAPONS.push(
+  {name:'Frag Grenade',short:'GRENADE',type:'semi',ammo:2,damage:85,head:1,rate:.8,reload:0,range:80,spread:0,ads:85,color:'#bed68c',model:'grenade',projectile:'grenade',throwable:true,speed:17,gravity:18,fuse:2.1,radius:4.5,description:'Two throws per round. Bounces before its timed explosion. Walls block splash; a timed katana parry blocks damage.'},
+  {name:'Molotov',short:'MOLOTOV',type:'semi',ammo:1,damage:7,head:1,rate:.85,reload:0,range:80,spread:0,ads:85,color:'#ffab62',price:100,model:'molotov',projectile:'molotov',throwable:true,speed:16,gravity:18,radius:3.3,burnTime:5.5,burnInterval:.25,description:'One bottle per round. Shatters on impact and burns the ground for 5.5 seconds. Fire hurts everyone; cover and katana guard protect you.'},
+  {name:'Sidekick Pistol',short:'PISTOL',type:'semi',ammo:12,damage:18,head:1.7,rate:.22,reload:1.4,range:60,spread:.02,ads:64,color:'#9bd3e3',model:'pistol',recoil:.55,recoilDuration:.22,soundPitch:215,description:'A free, dependable secondary. Twelve shots with a quick reload. Tap to fire.'}
+);
+export const LOADOUT_SLOTS = ['PRIMARY','SECONDARY','MELEE','UTILITY'];
+export const DEFAULT_LOADOUT = [0,21,4,19];
+export const STARTER_WEAPONS = [0,1,2,3,4,19,21];
+export const weaponSlot = id => !Number.isInteger(id)||!WEAPONS[id]?-1:WEAPONS[id].throwable?3:WEAPONS[id].ammo===-1?2:[6,7,13,17,21].includes(id)?1:0;
+export const validLoadout = kit => Array.isArray(kit)&&kit.length===4&&DEFAULT_LOADOUT.every((_,slot)=>weaponSlot(kit[slot])===slot);
+export function normalizeLoadout(kit,owned=STARTER_WEAPONS){return DEFAULT_LOADOUT.map((fallback,slot)=>(Array.isArray(kit)?kit:[]).find(id=>owned.includes(id)&&weaponSlot(id)===slot)??owned.find(id=>weaponSlot(id)===slot)??fallback);}
 export const isMelee = id => WEAPONS[id]?.ammo === -1;
 const box = (x, z, w, h, d, kind = 'cover', y = 0) => ({ x, z, w, h, d, y, kind });
 const ramp = (x, z, w, h, d, dir = 1, y = 0) => ({ x, z, w, h, d, dir, y });
@@ -95,7 +105,7 @@ function updateGrapple(p,input,map,dt,stunned){
 export function movePlayer(p, input, map, dt) {
   const stunned=p.stun>0;p.stun=Math.max(0,(p.stun||0)-dt);
   if(stunned)input={...input,x:0,z:0,ads:false,sprint:false,crouch:false};
-  p.yaw=input.yaw;p.pitch=input.pitch;p.ads=input.ads&&!isMelee(p.weapon);
+  p.yaw=input.yaw;p.pitch=input.pitch;p.ads=input.ads&&!isMelee(p.weapon)&&!WEAPONS[p.weapon].throwable;
   updateGrapple(p,input,map,dt,stunned);
   const jump=!stunned&&input.jump>p.lastJump, slide=!stunned&&input.slide>p.lastSlide;
   p.lastJump=Math.max(p.lastJump,input.jump);p.lastSlide=Math.max(p.lastSlide,input.slide);p.slideCD=Math.max(0,p.slideCD-dt);
@@ -173,7 +183,7 @@ export function castShot(o,d,map,players,shooter,range){
     const bt=rayBox(o,d,{x:p.p[0],z:p.p[2],y:p.p[1],w:.68,h:h-.22,d:.68},t);if(bt!==null){t=bt;target=p;head=false;}}
   return {target,head,p:o.map((v,i)=>v+d[i]*t)};
 }
-export function createMatch(map='foundry'){return {map,players:[],projectiles:[],projectileSeq:0,phase:'waiting',clock:0,round:1,winner:null,roundWinner:null,events:[],eventSeq:0,time:0};}
+export function createMatch(map='foundry'){return {map,players:[],projectiles:[],hazards:[],projectileSeq:0,phase:'waiting',clock:0,round:1,winner:null,roundWinner:null,events:[],eventSeq:0,time:0};}
 // Local-only practice uses the same movement and weapon rules, without a duel.
 // The server never accepts this flag from client inputs or room creation.
 export function createFreePlay(map='foundry',name='Runner',loadout=DEFAULT_LOADOUT){
@@ -184,10 +194,10 @@ export function createFreePlay(map='foundry',name='Runner',loadout=DEFAULT_LOADO
 export function resetFreePlay(m){
   if(!m.freePlay)return;
   for(const p of m.players)resetPlayer(p,mapById(m.map));
-  m.projectiles=[];m.events=[];
+  m.projectiles=[];m.hazards=[];m.events=[];
 }
 export function emit(m,type,data={}){m.events.push({id:++m.eventSeq,type,...data});if(m.events.length>96)m.events.shift();}
-export function startRound(m){m.phase='countdown';m.clock=3;m.roundWinner=null;m.projectiles=[];for(const p of m.players)resetPlayer(p,mapById(m.map));emit(m,'round',{round:m.round});}
+export function startRound(m){m.phase='countdown';m.clock=3;m.roundWinner=null;m.projectiles=[];m.hazards=[];for(const p of m.players)resetPlayer(p,mapById(m.map));emit(m,'round',{round:m.round});}
 export function endRound(m,winner){if(m.phase!=='live')return;m.roundWinner=winner?.id||null;if(winner)winner.score++;m.phase=winner?.score>=5?'finished':'intermission';m.clock=m.phase==='finished'?0:3.5;m.winner=m.phase==='finished'?winner.id:null;emit(m,m.phase==='finished'?'matchEnd':'roundEnd',{winner:m.roundWinner});}
 export function readyPlayer(m,p){p.ready=true;if(m.players.length===2&&m.players.every(p=>p.ready)&&(m.phase==='waiting'||m.phase==='finished')){for(const x of m.players){x.score=0;x.ready=false;}m.round=1;m.winner=null;startRound(m);}}
 function randomShot(seed){let n=seed|0;return()=>{n=(Math.imul(n,1664525)+1013904223)|0;return(n>>>0)/4294967296;};}
@@ -257,10 +267,10 @@ export function stepMatch(m,inputs,dt=TICK){
   for(const p of m.players){if(p.hp<=0)continue;const i=controls.get(p.id),w=WEAPONS[p.weapon];
     if(p.stun>0){p.lastFire=Math.max(p.lastFire,i.fireId);p.trigger=i.fire;continue;}
     p.charge=w.charge&&i.ads&&p.reload<=0?Math.min(1,p.charge+dt/1.1):0;
-    if(i.reload&&p.reload<=0&&w.ammo>0&&p.ammo[p.weapon]<w.ammo){p.reload=w.reload;p.burstLeft=0;emit(m,'reload',{player:p.id});}
+    if(i.reload&&!w.throwable&&p.reload<=0&&w.ammo>0&&p.ammo[p.weapon]<w.ammo){p.reload=w.reload;p.burstLeft=0;emit(m,'reload',{player:p.id});}
     const firePressed=i.fireId>p.lastFire;p.lastFire=Math.max(p.lastFire,i.fireId);
     if((p.burstLeft>0||((i.fire||firePressed)&&(firePressed||!p.trigger||w.type==='auto')))&&p.cooldown<=0&&p.reload<=0&&p.parry<=0&&(!w.spinup||p.spin>=1)){
-      if(p.ammo[p.weapon]===0){p.reload=w.reload;p.burstLeft=0;emit(m,'reload',{player:p.id});}
+      if(p.ammo[p.weapon]===0){if(!w.throwable){p.reload=w.reload;p.burstLeft=0;emit(m,'reload',{player:p.id});}}
       else{
         if(w.burst&&p.burstLeft===0)p.burstLeft=w.burst;
         if(p.burstLeft>0)p.burstLeft--;p.cooldown=p.burstLeft>0?w.burstRate:w.rate;if(w.ammo>0)p.ammo[p.weapon]--;p.shots++;
@@ -269,7 +279,7 @@ export function stepMatch(m,inputs,dt=TICK){
           p.swing={weapon:p.weapon,remaining:MOVEMENT.clashWindow};
         }else if(w.projectile){
           const direction=forward(p.yaw,p.pitch),power=w.charge?.55+.45*p.charge:1,speed=w.speed*(w.charge?.6+.4*p.charge:1);
-          m.projectiles.push({id:++m.projectileSeq,owner:p.id,weapon:p.weapon,kind:w.projectile,p:[...origin],v:direction.map(x=>x*speed),damage:w.damage*power,life:w.range/speed});p.charge=0;
+          m.projectiles.push({id:++m.projectileSeq,owner:p.id,weapon:p.weapon,kind:w.projectile,p:[...origin],v:direction.map((x,i)=>x*speed+(w.throwable&&i===1?2.5:0)),damage:w.damage*power,life:w.fuse||w.range/speed});p.charge=0;
           if(w.autoReload){p.reload=w.reload;emit(m,'reload',{player:p.id});}
         }else if(w.flame){
           const direction=forward(p.yaw,p.pitch),reach=rayWorld(origin,direction,map,w.range);impacts.push(origin.map((v,i)=>v+direction[i]*reach));
@@ -290,7 +300,7 @@ export function stepMatch(m,inputs,dt=TICK){
     }p.trigger=i.fire;
   }
   resolveMelee(m,map,dt);
-  stepProjectiles(m,map,dt);
+  stepProjectiles(m,map,dt);stepHazards(m,map,dt);
   // Keep blast-jump impulse, but restore health and never award or end a round.
   if(m.freePlay){for(const p of m.players)p.hp=100;return;}
   const living=m.players.filter(p=>p.hp>0);
@@ -298,7 +308,9 @@ export function stepMatch(m,inputs,dt=TICK){
   if(m.clock<=0){const [a,b]=m.players;endRound(m,a.hp===b.hp?null:a.hp>b.hp?a:b);}
 }
 export function stepProjectiles(m,map,dt){
-  for(let n=m.projectiles.length-1;n>=0;n--){const q=m.projectiles[n],w=WEAPONS[q.weapon];q.life-=dt;q.v[1]-=w.gravity*dt;const distance=length(q.v)*dt,d=norm(q.v),hit=castShot(q.p,d,map,m.players,q.owner,distance),travel=length(hit.p.map((v,i)=>v-q.p[i]));
+  for(let n=m.projectiles.length-1;n>=0;n--){const q=m.projectiles[n],w=WEAPONS[q.weapon];
+    if(w.throwable){if(stepThrowable(m,q,map,dt))m.projectiles.splice(n,1);continue;}
+    q.life-=dt;q.v[1]-=w.gravity*dt;const distance=length(q.v)*dt,d=norm(q.v),hit=castShot(q.p,d,map,m.players,q.owner,distance),travel=length(hit.p.map((v,i)=>v-q.p[i]));
     const impact=hit.target||travel<distance-.00001;
     if(impact||q.life<=0){
       if(q.kind==='rocket'){
@@ -315,4 +327,49 @@ export function stepProjectiles(m,map,dt){
     }else q.p=hit.p;
   }
 }
-export function snapshot(m){return {map:m.map,phase:m.phase,clock:m.clock,round:m.round,winner:m.winner,roundWinner:m.roundWinner,players:m.players,projectiles:m.projectiles,time:m.time,events:m.events.slice(-48)};}
+// Swept contacts keep fast throws from tunnelling through thin cover. The normal
+// is taken from the same box/ramp planes used by the shared collision geometry.
+function throwableContact(origin,dir,map,range){
+  let distance=range,normal=null;
+  const take=(t,planes)=>{if(t===null||t>=distance)return;distance=t;const p=origin.map((v,i)=>v+dir[i]*t);
+    const plane=planes.filter(a=>a.slice(0,3).reduce((s,v,i)=>s+v*dir[i],0)<-1e-8).sort((a,b)=>Math.abs(a[3]-a.slice(0,3).reduce((s,v,i)=>s+v*p[i],0))/length(a.slice(0,3))-Math.abs(b[3]-b.slice(0,3).reduce((s,v,i)=>s+v*p[i],0))/length(b.slice(0,3)))[0];
+    normal=plane?norm(plane.slice(0,3)):dir.map(v=>-v);
+  };
+  for(const b of map.boxes)take(rayBox(origin,dir,b,distance),[[1,0,0,b.x+b.w/2],[-1,0,0,-b.x+b.w/2],[0,1,0,b.y+b.h],[0,-1,0,-b.y],[0,0,1,b.z+b.d/2],[0,0,-1,-b.z+b.d/2]]);
+  for(const r of map.ramps)take(rayRamp(origin,dir,r,distance),[[1,0,0,r.x+r.w/2],[-1,0,0,-r.x+r.w/2],[0,-1,0,-r.y],[0,0,1,r.z+r.d/2],[0,0,-1,-r.z+r.d/2],[0,1,-r.h/r.d*r.dir,r.y+r.h*.5-r.h/r.d*r.dir*r.z]]);
+  if(dir[1]<-1e-8)take(-origin[1]/dir[1]>=0?-origin[1]/dir[1]:null,[[0,1,0,0]]);
+  return {p:origin.map((v,i)=>v+dir[i]*distance),normal};
+}
+function stepThrowable(m,q,map,dt){
+  const w=WEAPONS[q.weapon];q.life-=dt;q.v[1]-=w.gravity*dt;
+  const contact=throwableContact(q.p,norm(q.v),map,length(q.v)*dt);q.p=contact.p;
+  if(contact.normal){
+    q.p=q.p.map((v,i)=>v+contact.normal[i]*.035);
+    const dot=q.v.reduce((s,v,i)=>s+v*contact.normal[i],0);
+    q.v=q.v.map((v,i)=>(v-1.55*dot*contact.normal[i])*.78);
+  }
+  if(q.kind==='molotov'&&(contact.normal||q.life<=0)){
+    const ground=floorAt(map,q.p[0],q.p[2],q.p[1]+.12),p=[q.p[0],ground+.06,q.p[2]];
+    m.hazards.push({id:q.id,owner:q.owner,weapon:q.weapon,p,radius:w.radius,life:w.burnTime,tick:0});
+    emit(m,'ignite',{position:p,radius:w.radius});return true;
+  }
+  if(q.kind==='grenade'&&q.life<=0){
+    for(const target of m.players){const point=[target.p[0],target.p[1]+eyeHeight(target)*.65,target.p[2]],delta=point.map((v,i)=>v-q.p[i]),dist=length(delta);
+      if(target.hp<=0||dist>w.radius||rayWorld(q.p,norm(delta),map,dist)<dist-.05)continue;
+      damagePlayer(m,target,q.owner,q.weapon,Math.round(w.damage*Math.max(.15,1-dist/w.radius)),false,point);
+    }
+    emit(m,'explosion',{position:[...q.p],radius:w.radius});return true;
+  }
+  return false;
+}
+export function fireReaches(h,point,map){
+  const delta=point.map((v,i)=>v-h.p[i]),distance=length(delta);
+  return Math.abs(delta[1])<1.7&&Math.hypot(delta[0],delta[2])<h.radius&&rayWorld(h.p,norm(delta),map,distance)>=distance-.03;
+}
+export function stepHazards(m,map,dt){
+  for(let i=m.hazards.length-1;i>=0;i--){const h=m.hazards[i],w=WEAPONS[h.weapon];h.life-=dt;
+    if(h.life<=0){m.hazards.splice(i,1);continue;}h.tick-=dt;if(h.tick>1e-7)continue;h.tick+=w.burnInterval;
+    for(const p of m.players){const point=[p.p[0],p.p[1]+.4,p.p[2]];if(p.hp>0&&fireReaches(h,point,map))damagePlayer(m,p,h.owner,h.weapon,w.damage,false,point);}
+  }
+}
+export function snapshot(m){return {map:m.map,phase:m.phase,clock:m.clock,round:m.round,winner:m.winner,roundWinner:m.roundWinner,players:m.players,projectiles:m.projectiles,hazards:m.hazards,time:m.time,events:m.events.slice(-48)};}
