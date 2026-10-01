@@ -1,6 +1,6 @@
 {
   "name": "velocity-arena",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "private": true,
   "type": "module",
   "description": "A movement-first arena FPS expanded from Open World Physics Lab",

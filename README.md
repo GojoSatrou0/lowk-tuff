@@ -24,6 +24,7 @@ npm start
 
 ## What is included
 
+- **Overhead beam grappling (1.9.2):** the narrow overhead beam and its supports on Foundry and Afterlight are solid grapple targets in practice and multiplayer. Aim at the beam within 30 m and hold Q; release to let go. You can land on its top. The visible beam dimensions are also used for collision and server ray checks.
 - **Motion update (1.9.1):** sharper weapon recoil with smooth recovery, drawn weapon transitions, sprint and guard poses, timed reloads, moving magazines, and improved melee swings. The sniper now shows optical recoil, a bolt cycle, shell ejection, and a ready indicator while scoped; its central aiming reticle stays fixed. Reduce Weapon Motion removes the added movement and flash while keeping the ready indicator.
 - **Parry Practice:** a borrowed katana, timed incoming shots, a green parry cue, instant retries, accuracy counts and streaks. Press F or right mouse when the cue appears.
 - **Stun Practice:** learn to win real blade clashes with speed. Press T to toggle a stationary or sprinting trainer; the sprinting trainer also lets you practice recovering from a lost clash. Both drills run locally on a clear Foundry lane, lend their kit, and award no coins. Esc pauses; Retry resets the attempt while keeping session statistics. Leaving restores the normal loadout.
