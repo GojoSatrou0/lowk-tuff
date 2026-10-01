@@ -5,6 +5,7 @@
   <meta name="theme-color" content="#111c23"><meta name="description" content="Play Velocity Arena, a free online browser FPS. Race through 1v1 duels, chain slide-jumps, parry shots and win melee clashes with speed. First to five wins.">
   <title>Velocity Arena — Free Online FPS &amp; Multiplayer Duels</title>
   <link rel="canonical" href="https://velocity-arena.netlify.app/">
+  <meta name="application-version" content="1.9.1">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta property="og:type" content="website"><meta property="og:site_name" content="Velocity Arena">
   <meta property="og:title" content="Velocity Arena — Free Online FPS">
@@ -15,6 +16,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Velocity Arena","url":"https://velocity-arena.netlify.app/"},{"@type":"VideoGame","name":"Velocity Arena","url":"https://velocity-arena.netlify.app/","description":"A free browser FPS with first-to-five multiplayer duels, momentum movement, melee clashes and katana parries.","genre":["First-person shooter","Action"],"gamePlatform":"Web browser","playMode":["SinglePlayer","MultiPlayer"],"isAccessibleForFree":true}]}</script>
   <link rel="icon" href="app-icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="assets/momentum.css">
+  <link rel="stylesheet" href="assets/animations.css">
 </head>
 <body>
   <canvas id="world" tabindex="-1" aria-label="Velocity Arena 3D game"></canvas>
@@ -27,7 +29,7 @@
     </header>
     <div id="play-view" class="play-view">
       <section class="hero">
-        <div class="eyebrow"><span></span> VELOCITY ARENA / TRAINING + GRAPPLE</div>
+        <div class="eyebrow"><span></span> VELOCITY ARENA / THE MOTION UPDATE</div>
         <h1>STAY QUICK.<br><em>HIT FIRST.</em></h1>
         <p>Build speed. Win the clash.<br>A free browser FPS. Five rounds to prove it.</p>
         <div class="mode-pills"><span>1V1 DUELS</span><i></i><span>FIRST TO 5</span><i></i><span>NO DOWNLOAD</span></div>
@@ -50,7 +52,7 @@
     <div id="match-score" class="match-score"><div class="score-side"><span id="your-name">YOU</span><strong id="your-score">0</strong><div id="your-dots" class="score-dots"></div></div><div class="round-clock"><span id="round-label">ROUND 01</span><strong id="clock">01:30</strong><small>FIRST TO 5</small></div><div class="score-side opponent"><span id="their-name">RIVAL</span><strong id="their-score">0</strong><div id="their-dots" class="score-dots"></div></div></div>
     <div class="hud-top-right"><span id="fps">60 FPS</span><span id="ping">LOCAL</span><small>MENU <b>ESC</b></small></div>
     <canvas id="crosshair" class="crosshair" width="256" height="256" aria-hidden="true"></canvas><div id="hitmarker" class="hitmarker">×</div><div id="damage-vignette"></div>
-    <div id="scope" class="scope" hidden><div class="scope-circle"><i></i><b></b><span>LONGSHOT / 4×</span></div></div>
+    <div id="scope" class="scope" hidden aria-label="Sniper scope"><div class="scope-circle"><i></i><b></b><span class="scope-label">LONGSHOT / 4×</span><div class="scope-center"></div><div class="scope-action"><div class="scope-bolt-track"><div class="scope-bolt"><div></div></div></div><strong data-scope-status>READY</strong><div class="scope-ready-track"><div data-scope-progress></div></div></div></div><div class="scope-rim"></div><div class="scope-shot-glow"></div><div class="scope-casing"></div></div>
     <div id="round-banner" class="round-banner" hidden><span id="banner-kicker">GET READY</span><h2 id="banner-title">3</h2><p id="banner-note">Find your next angle.</p></div>
     <div class="hud-bottom"><div class="health"><div><span>VITALS</span><strong id="health-value">100</strong><b>＋</b></div><div class="health-track"><i id="health-bar"></i></div><small id="movement-state">READY TO MOVE</small></div><div class="weapon-belt" id="weapon-belt"></div><div class="ammo"><span id="weapon-name">V-24 CARBINE</span><div><strong id="ammo-value">24</strong><small id="ammo-max">/ 24</small></div><span id="reload-label">RELOAD <b>R</b></span></div></div>
     <div id="ability" class="ability" hidden><span id="ability-name">KATANA PARRY</span><strong id="ability-state">READY · RMB / F</strong><div><i id="ability-fill"></i></div><small id="ability-note">ROCKETS & MELEE BYPASS</small></div>

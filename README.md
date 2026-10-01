@@ -24,6 +24,7 @@ npm start
 
 ## What is included
 
+- **Motion update (1.9.1):** sharper weapon recoil with smooth recovery, drawn weapon transitions, sprint and guard poses, timed reloads, moving magazines, and improved melee swings. The sniper now shows optical recoil, a bolt cycle, shell ejection, and a ready indicator while scoped; its central aiming reticle stays fixed. Reduce Weapon Motion removes the added movement and flash while keeping the ready indicator.
 - **Parry Practice:** a borrowed katana, timed incoming shots, a green parry cue, instant retries, accuracy counts and streaks. Press F or right mouse when the cue appears.
 - **Stun Practice:** learn to win real blade clashes with speed. Press T to toggle a stationary or sprinting trainer; the sprinting trainer also lets you practice recovering from a lost clash. Both drills run locally on a clear Foundry lane, lend their kit, and award no coins. Esc pauses; Retry resets the attempt while keeping session statistics. Leaving restores the normal loadout.
 - **Grapple movement ability:** hold Q while aiming at solid cover within 30 m; release Q to let go and carry momentum. It works alongside any weapon without taking a loadout slot. A tether lasts up to 1.8 seconds and recharges for 2.5 seconds after detaching. Walls, range, collision, stun, death and stale network input all restrict it. It cannot grab opponents. Aim higher on cover to gain height.
