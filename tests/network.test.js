@@ -7,7 +7,7 @@ test('HTTP katana parry blocks a WebSocket shooter and expires on the authoritat
   const app=createArenaServer({port:0,host:'127.0.0.1'}),address=await app.listen();t.after(()=>app.close());const base=`http://127.0.0.1:${address.port}`;
   const post=async d=>{const r=await fetch(base+'/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});assert.equal(r.status,200);return r.json();};
   const profile=await post({action:'profile'});app.profiles.reward(profile.profileToken,200);
-  await post({action:'purchase',profileToken:profile.profileToken,weapon:10});await post({action:'loadout',profileToken:profile.profileToken,loadout:[10,1,2,3,4]});
+  await post({action:'purchase',profileToken:profile.profileToken,weapon:10});await post({action:'loadout',profileToken:profile.profileToken,loadout:[0,21,10,19]});
   const a=await post({action:'create',name:'Shooter'}),b=await post({action:'join',name:'Guard',room:a.room,profileToken:profile.profileToken});
   const ws=new WebSocket(`ws://127.0.0.1:${address.port}/socket`);t.after(()=>ws.close());await new Promise(resolve=>ws.on('open',resolve));ws.send(JSON.stringify({token:a.token}));
   const match=app.rooms.get(a.room).match;match.phase='live';match.clock=90;const shooter=match.players.find(p=>p.id===a.you),guard=match.players.find(p=>p.id===b.you);shooter.p=[-12,0,12];guard.p=[-12,0,4];shooter.cooldown=0;

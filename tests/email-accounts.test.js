@@ -15,7 +15,7 @@ test('email normalization validates format, folds case and IDNs, and retains dot
 });
 test('email signup preserves a guest wallet and email login restores it after restart',async()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'velocity-email-')),s=new ProfileStore(dir),guest=s.create();
-  s.purchase(guest.profileToken,13);s.equip(guest.profileToken,[0,13,2,3,4]);s.reward(guest.profileToken,35);
+  s.purchase(guest.profileToken,13);s.equip(guest.profileToken,[0,13,4,19]);s.reward(guest.profileToken,35);
   const account=await s.register('EmailRunner',password,guest.profileToken,undefined,'Runner+One@Example.com');
   assert.equal(account.user.email,'Runner+One@Example.com');assert.equal(account.user.emailVerified,false);assert.equal(s.get(guest.profileToken),null);
   const restored=new ProfileStore(dir),login=await restored.login(' RUNNER+ONE@EXAMPLE.COM ',password);

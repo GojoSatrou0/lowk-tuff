@@ -8,13 +8,13 @@ import {ProfileStore} from '../profile-store.js';
 import {createArenaServer} from '../server.js';
 import {endRound} from '../src/shared.js';
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-test('wallet charges once, rejects insufficient funds, and requires five unique owned weapons',()=>{
-  const p=freshProfile();assert.equal(p.coins,100);assert.deepEqual(p.loadout,[0,1,2,3,4]);
+test('wallet charges once, rejects insufficient funds, and requires one owned weapon per category',()=>{
+  const p=freshProfile();assert.equal(p.coins,100);assert.deepEqual(p.loadout,[0,21,4,19]);
   assert(buyWeapon(p,13));assert.equal(p.coins,0);assert(!buyWeapon(p,13));assert.equal(p.coins,0);
   const before=structuredClone(p);assert.throws(()=>buyWeapon(p,9),/more coins/);assert.deepEqual(p,before);
   for(const invalid of [-1,99,6.1,'6',null])assert.throws(()=>buyWeapon(p,invalid));
   for(const invalid of [[0,1,2,3,9],[0,0,2,3,4],[0,1,2,3],null])assert.throws(()=>equipLoadout(p,invalid));
-  equipLoadout(p,[0,13,2,3,4]);assert.deepEqual(p.loadout,[0,13,2,3,4]);
+  equipLoadout(p,[0,13,4,19]);assert.deepEqual(p.loadout,[0,13,4,19]);
 });
 test('round and match rewards have no duplicate final-round payment, draws earn nothing',()=>{
   assert.equal(rewardFor({type:'roundEnd',winner:'a'},'a'),35);assert.equal(rewardFor({type:'roundEnd',winner:'a'},'b'),10);
@@ -23,7 +23,7 @@ test('round and match rewards have no duplicate final-round payment, draws earn 
 });
 test('profiles persist purchases, rewards, and loadouts across server-store restart without storing raw tokens',()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'velocity-wallet-test-')),a=new ProfileStore(dir),{profileToken}=a.create();
-  a.purchase(profileToken,13);a.equip(profileToken,[0,13,2,3,4]);a.reward(profileToken,35);
+  a.purchase(profileToken,13);a.equip(profileToken,[0,13,4,19]);a.reward(profileToken,35);
   const b=new ProfileStore(dir),p=b.get(profileToken);assert.equal(p.coins,35);assert.equal(p.earned,35);assert(p.owned.includes(13));assert.equal(p.loadout[1],13);
   assert(!readFileSync(path.join(dir,'profiles.json'),'utf8').includes(profileToken));assert.equal(b.get('forged'),null);
 });
@@ -35,7 +35,7 @@ test('real API protects coins and ownership, locks changes in rooms, awards exac
   assert.equal((await post({...auth,action:'purchase',weapon:9,coins:999999,price:0})).status,400);
   assert.equal((await post({...auth,action:'purchase',weapon:13})).profile.coins,0);
   assert.equal((await post({...auth,action:'loadout',loadout:[0,9,2,3,4]})).status,400);
-  await post({...auth,action:'loadout',loadout:[0,13,2,3,4]});
+  await post({...auth,action:'loadout',loadout:[0,13,4,19]});
   const s=await post({...auth,action:'practice'});assert.equal(s.practice,true);assert.equal(s.players.length,2);assert.equal(s.players[0].loadout[1],13);
   assert.equal((await post({...auth,action:'practice'})).status,409);assert.equal((await post({...auth,action:'purchase',weapon:7})).status,409);
   assert.equal((await post({action:'reward',token:s.token,amount:999})).status,400);
@@ -57,7 +57,7 @@ test('real API protects coins and ownership, locks changes in rooms, awards exac
 test('starter-grant migration only changes untouched 300-coin wallets and is idempotent',()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'velocity-migration-test-')),store=new ProfileStore(dir);
   const fresh=store.create().profileToken,played=store.create().profileToken,custom=store.create().profileToken;
-  store.get(fresh).coins=300;store.get(played).coins=300;store.reward(played,35);store.get(custom).coins=300;store.equip(custom,[1,0,2,3,4]);store.save();
+  store.get(fresh).owned=[0,1,2,3,4];store.get(fresh).loadout=[0,1,2,3,4];store.get(fresh).coins=300;store.get(played).coins=300;store.reward(played,35);store.get(custom).coins=300;store.equip(custom,[1,21,4,19]);store.save();
   const migrated=new ProfileStore(dir);assert.equal(migrated.get(fresh).coins,100);assert.equal(migrated.get(played).coins,335);assert.equal(migrated.get(custom).coins,300);
   const again=new ProfileStore(dir);assert.deepEqual(again.get(fresh),migrated.get(fresh));
 });

@@ -36,22 +36,25 @@ test('new unlocks preserve 100 starting coins, charge exactly once and survive s
   const store=new ProfileStore(),{profileToken}=store.create();assert.equal(store.get(profileToken).coins,100);
   for(const id of [15,16,17,18])assert.throws(()=>store.purchase(profileToken,id),/more coins/);
   store.reward(profileToken,1000);for(const id of [15,16,17,18]){store.purchase(profileToken,id);store.purchase(profileToken,id);}
-  store.equip(profileToken,[15,16,17,18,0]);assert.equal(store.get(profileToken).coins,175);
+  store.equip(profileToken,[15,17,18,19]);assert.equal(store.get(profileToken).coins,175);
   const restored=new ProfileStore();restored.restore(store.serialize());assert.deepEqual(restored.get(profileToken),store.get(profileToken));
 });
 test('HTTP purchases equip all new weapons and a WebSocket observer receives their real attacks',async t=>{
   const app=createArenaServer({port:0,host:'127.0.0.1'}),address=await app.listen();t.after(()=>app.close());const base=`http://127.0.0.1:${address.port}`;
   const post=async data=>{const r=await fetch(base+'/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});assert.equal(r.status,200);return r.json();};
   const wallet=await post({action:'profile'}),auth={profileToken:wallet.profileToken};app.profiles.reward(wallet.profileToken,1000);
-  for(const weapon of [15,16,17,18])await post({...auth,action:'purchase',weapon});await post({...auth,action:'loadout',loadout:[15,16,17,18,0]});
+  for(const weapon of [15,16,17,18])await post({...auth,action:'purchase',weapon});
+  const allSeen=new Set();for(const primary of [15,16]){await post({...auth,action:'loadout',loadout:[primary,17,18,19]});
   const a=await post({...auth,action:'create'}),b=await post({action:'join',room:a.room});
   const ws=new WebSocket(base.replace('http:','ws:')+'/socket'),seen=new Set();t.after(()=>ws.terminate());
   ws.on('message',raw=>{const view=JSON.parse(raw);for(const e of view.events||[])if(e.type==='shot'&&e.player===a.you)seen.add(e.weapon);});
   await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});ws.send(JSON.stringify({token:b.token}));
   await post({action:'ready',token:a.token});await post({action:'ready',token:b.token});await delay(3100);
-  let seq=0,fireId=0;for(const weapon of [15,16,17,18]){
+  let seq=0,fireId=0;for(const weapon of [primary,17,18]){
     await post({action:'input',token:a.token,input:{seq:++seq,weapon,yaw:1.5,fireId}});await delay(1000);
     await post({action:'input',token:a.token,input:{seq:++seq,weapon,yaw:1.5,fireId:++fireId}});await delay(100);
   }
-  assert.deepEqual([...seen].sort(),[15,16,17,18]);assert.deepEqual((await post({action:'poll',token:b.token})).players.find(p=>p.id===a.you).loadout,[15,16,17,18,0]);
+  assert.deepEqual([...seen].sort(),[primary,17,18]);for(const id of seen)allSeen.add(id);assert.deepEqual((await post({action:'poll',token:b.token})).players.find(p=>p.id===a.you).loadout,[primary,17,18,19]);
+  ws.terminate();await post({action:'leave',token:b.token});await post({action:'leave',token:a.token});}
+  assert.deepEqual([...allSeen].sort(),[15,16,17,18]);
 });

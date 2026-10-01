@@ -14,7 +14,7 @@ test('cloud storage survives server replacement with email login, wallet, loadou
   const repo=repository(),first=await openDatabaseProfiles(repo),guest=first.create();
   first.reward(guest.profileToken,500);
   const session=await first.register('CloudFixture','Disposable fixture password 473!',guest.profileToken,()=>{},'cloud@example.test');
-  first.purchaseById(session.profileId,5);first.equipById(session.profileId,[5,1,2,3,4]);
+  first.purchaseById(session.profileId,5);first.equipById(session.profileId,[5,21,4,19]);
   await first.flush();const expected=structuredClone(first.getById(session.profileId));
   const second=await openDatabaseProfiles(repo),signedIn=await second.login('CLOUD@example.test','Disposable fixture password 473!');
   await second.flush();assert.deepEqual(second.getById(signedIn.profileId),expected);assert.equal(second.guestId(guest.profileToken),null);

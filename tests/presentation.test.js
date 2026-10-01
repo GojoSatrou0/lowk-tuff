@@ -5,9 +5,9 @@ import {WEAPONS,isMelee} from '../src/shared.js';
 
 test('weapon motion stays bounded, gives guns a kick, and fully settles without gun recoil on melee',()=>{
   for(let id=0;id<WEAPONS.length;id++){
-    for(let age=0;age<1.5;age+=.007){const p=weaponMotion(id,age);for(const value of Object.values(p))assert(Number.isFinite(value)&&Math.abs(value)<2);if(isMelee(id))assert.equal(p.kick,0);}
+    for(let age=0;age<1.5;age+=.007){const p=weaponMotion(id,age);for(const value of Object.values(p))assert(Number.isFinite(value)&&Math.abs(value)<2);if(isMelee(id)||WEAPONS[id].throwable)assert.equal(p.kick,0);}
     const rest=weaponMotion(id,10);assert.equal(rest.kick,0);assert.equal(rest.cycle,0);assert.equal(rest.bolt,0);
-    if(!isMelee(id))assert(weaponMotion(id,.012).kick>0);
+    if(!isMelee(id)&&!WEAPONS[id].throwable)assert(weaponMotion(id,.012).kick>0);
     assert.equal(weaponMotion(id,NaN).kick,0);
   }
   assert(weaponMotion(2,.03).kick>weaponMotion(1,.03).kick);

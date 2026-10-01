@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MAPS,WEAPONS,TICK,createFreePlay,resetFreePlay,stepMatch,cleanInput} from '../src/shared.js';
 test('free play starts alone on each chosen map and never completes rounds or earns rewards',()=>{
-  for(const map of MAPS){const kit=[1,0,2,3,4],m=createFreePlay(map.id,'Practice',kit),p=m.players[0];
+  for(const map of MAPS){const kit=[1,21,4,19],m=createFreePlay(map.id,'Practice',kit),p=m.players[0];
     assert.equal(m.players.length,1);assert.equal(p.id,'you');assert.equal(p.weapon,1);assert.deepEqual(p.p,map.spawns[0]);assert.notEqual(p.loadout,kit);
     for(let i=0;i<60*100;i++)stepMatch(m,{you:cleanInput({weapon:1})});
     assert.equal(m.phase,'live');assert.equal(m.clock,0);assert.equal(m.round,0);assert.equal(m.winner,null);assert.equal(p.score,0);assert.equal(p.hp,100);

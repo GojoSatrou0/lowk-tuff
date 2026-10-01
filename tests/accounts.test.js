@@ -20,13 +20,13 @@ async function server(t,options={}){
 }
 test('account claims guest purchases and loadout, invalidates old bearer, persists without plaintext secrets',async()=>{
   const dir=mkdtempSync(path.join(tmpdir(),'velocity-account-')),store=new ProfileStore(dir),guest=store.create();
-  store.purchase(guest.profileToken,13);store.equip(guest.profileToken,[0,13,2,3,4]);store.reward(guest.profileToken,35);
+  store.purchase(guest.profileToken,13);store.equip(guest.profileToken,[0,13,4,19]);store.reward(guest.profileToken,35);
   const a=await store.register('TestRunner',password,guest.profileToken);
   assert.equal(store.get(guest.profileToken),null);assert.equal(store.getById(a.profileId).coins,35);
   const saved=readFileSync(path.join(dir,'profiles.json'),'utf8');
   assert(!saved.includes(password));assert(!saved.includes(guest.profileToken));assert(!saved.includes(a.token));
   const restored=new ProfileStore(dir),signed=await restored.login('TESTRUNNER',password);
-  assert.deepEqual(restored.getById(signed.profileId).loadout,[0,13,2,3,4]);assert.equal(restored.authenticate(a.token).user.username,'TestRunner');
+  assert.deepEqual(restored.getById(signed.profileId).loadout,[0,13,4,19]);assert.equal(restored.authenticate(a.token).user.username,'TestRunner');
   restored.logout(a.token);assert.equal(restored.authenticate(a.token),null);assert(restored.authenticate(signed.token));
 });
 test('legacy v1 wallets migrate with a backup and retain their bearer access until claimed',()=>{
@@ -34,7 +34,7 @@ test('legacy v1 wallets migrate with a backup and retain their bearer access unt
   store.reward(guest.profileToken,155);
   writeFileSync(path.join(dir,'profiles.json'),JSON.stringify({version:1,profiles:store.profiles}));
   const restored=new ProfileStore(dir);assert.equal(restored.get(guest.profileToken).coins,255);assert(existsSync(path.join(dir,'profiles.json.v1.bak')));
-  assert.equal(JSON.parse(readFileSync(path.join(dir,'profiles.json'),'utf8')).version,3);
+  assert.equal(JSON.parse(readFileSync(path.join(dir,'profiles.json'),'utf8')).version,4);
 });
 test('validates credentials, uses unique salts, handles object-key usernames and concurrent claims',async()=>{
   const store=new ProfileStore();
@@ -62,8 +62,8 @@ test('real HTTP signup, login on another device, purchase and logout load indepe
   assert.equal((await post({action:'profile',profileToken:guest.body.profileToken})).status,410);
   assert.equal((await post({action:'profile'},{cookie})).body.user.username,'BrowserOne');
   const login=await post({action:'login',username:'browserone',password},{auth:true});assert.equal(login.status,200);assert.notEqual(login.cookie,cookie);assert(login.body.profile.owned.includes(13));
-  assert.equal((await post({action:'loadout',loadout:[0,13,2,3,4],expectedUser:'BrowserOne'},{cookie:login.cookie})).status,200);
-  assert.deepEqual((await post({action:'profile'},{cookie})).body.profile.loadout,[0,13,2,3,4]);
+  assert.equal((await post({action:'loadout',loadout:[0,13,4,19],expectedUser:'BrowserOne'},{cookie:login.cookie})).status,200);
+  assert.deepEqual((await post({action:'profile'},{cookie})).body.profile.loadout,[0,13,4,19]);
   const out=await post({action:'logout'},{cookie,auth:true});assert.match(out.setCookie,/Max-Age=0/);
   assert.equal((await post({action:'profile'},{cookie})).status,401);
   assert.equal((await post({action:'profile'},{cookie:login.cookie})).status,200);
@@ -73,7 +73,7 @@ test('real HTTP signup, login on another device, purchase and logout load indepe
 });
 test('account rooms use saved loadout, earn authoritative rewards, and logout revokes room sockets',async t=>{
   const {post,app,base}=await server(t),signup=await post({action:'register',username:'Fighter',password},{auth:true}),cookie=signup.cookie;
-  await post({action:'purchase',weapon:13},{cookie});await post({action:'loadout',loadout:[0,13,2,3,4]},{cookie});
+  await post({action:'purchase',weapon:13},{cookie});await post({action:'loadout',loadout:[0,13,4,19]},{cookie});
   const room=await post({action:'practice',name:'Fighter'},{cookie});assert.equal(room.status,200);assert.equal(room.body.profileToken,null);assert.equal(room.body.players[0].loadout[1],13);
   const second=await post({action:'login',username:'Fighter',password},{auth:true});assert.equal((await post({action:'practice'},{cookie:second.cookie})).status,409);
   const ws=new WebSocket(base.replace('http:','ws:')+'/socket');t.after(()=>ws.terminate());await once(ws,'open');
