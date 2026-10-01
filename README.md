@@ -6,6 +6,8 @@ A standalone arena expansion built from the supplied **Open World Physics Lab â€
 
 **Using Netlify?** See [Netlify setup](docs/NETLIFY.md). A static upload does not run the account/multiplayer backend. Deploy the Node server, then use `BUILD_NETLIFY.bat` or the Netlify build configuration to connect your existing site to it.
 
+**No-card hosting:** [Northflank Sandbox setup](docs/NORTHFLANK.md) keeps the Node server separate from the free Neon account database. Render requested a card for this account, so its service was not created. Hosting and the live Netlify connection still need to be completed.
+
 1. Install **Node.js 22 or newer** if necessary.
 2. Double-click **START_GAME.bat**.
 3. Open **http://localhost:3000** in Chrome or Edge. Keep the launcher running.
@@ -125,7 +127,7 @@ The new weapon types are inspired by the [Rivals weapon roster](https://robloxri
 
 Locally, the server saves coins, unlocks, loadouts, and accounts in **`data/profiles.json`**. Cloud hosting uses **Neon Free Postgres** when `DATABASE_URL` is configured. Guest wallets use a private browser token; create an account to recover your progress on another device. Never share wallet tokens or include the data folder in a public repository/ZIP.
 
-For free hosting, use **Render Free + Neon Free** as described in [Netlify setup](docs/NETLIFY.md). Database commits preserve accounts across server sleep and replacement. Local disk hosting can use `DATA_DIR`; never rely on a temporary filesystem. See [hosting persistence](docs/MULTIPLAYER.md#keep-coins-after-redeploying). Prices and rewards live in `src/shared.js` and `src/economy.js`.
+For hosting without a card, follow [Northflank Sandbox + Neon Free setup](docs/NORTHFLANK.md), then [connect Netlify](docs/NETLIFY.md#update-netlify). Database commits preserve accounts across server sleep and replacement. Local disk hosting can use `DATA_DIR`; never rely on a temporary filesystem. See [hosting persistence](docs/MULTIPLAYER.md#keep-coins-after-redeploying). Prices and rewards live in `src/shared.js` and `src/economy.js`.
 
 ## Multiplayer
 
