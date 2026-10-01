@@ -1,5 +1,12 @@
 # Verification
 
+## Version 1.11 four-slot and throwable update
+
+- All 119 tests pass, including category/ownership validation, version 3 disk/database migration, retained sessions and coins, grenade fuse/bounces on floors/ramps/thin cover, splash/parry checks, Molotov burn timing and expiry, and per-round charges.
+- HTTP input and a WebSocket observer agree on fire-patch IDs, sizes, lifetime and ammo. Client-supplied damage, radius, lifetime and ammo do not change server rules.
+- The isolated browser test bought/equipped a Molotov, selected utility with 4 and pistol with 2, threw the bottle, displayed a burning patch, and refilled through Free Play reset. Four category buttons and category-filtered shop cards render correctly. No application warnings/errors were observed.
+- Grenade and bottle models have throw poses with no gun muzzle flash or casings. Grapple remains a separate Q ability.
+
 ## Version 1.10 arsenal update
 
 - Syntax checks and all **108 tests passed** on October 1, 2026. The renderer passed another syntax check after its sight alignment adjustment.
