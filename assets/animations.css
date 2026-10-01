@@ -1,0 +1,17 @@
+/* Optical recoil surrounds a fixed center reticle; aiming stays exact. */
+.scope{background:none;opacity:var(--scope-opacity,1);--scope-kick:0;--scope-flash:0;--scope-bolt:0;--scope-lift:0;--scope-casing:0}
+.scope-circle{border:2px solid #172a30;box-shadow:0 0 0 40vmax #060a0cf5,inset 0 0 24px #0c1f2866}
+.scope-circle>i,.scope-circle>b{background:#13211e;box-shadow:0 0 1px #d8f5e280}.scope-circle>i{width:88%}.scope-circle>b{height:88%}
+.scope-center{position:absolute;left:50%;top:50%;width:3px;height:3px;transform:translate(-50%,-50%);border-radius:50%;background:#e4fff2;box-shadow:0 0 3px #81e2c6}
+.scope-circle>.scope-label{top:13%;bottom:auto;font-size:8px;letter-spacing:2.4px;color:#b3d7c4;text-shadow:0 1px 2px #000}
+.scope-rim,.scope-shot-glow{position:absolute;left:50%;top:50%;width:65vmin;height:65vmin;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(calc(1 - var(--scope-kick)*.026))}
+.scope-rim{border:3px solid #668d8b99;box-shadow:inset 0 0 0 4px #0a151ed9,0 0 0 2px #0b151b;outline:1px solid #c4e4d75c;outline-offset:5px}
+.scope-shot-glow{background:radial-gradient(circle,transparent 50%,#ffe3aa 100%);opacity:var(--scope-flash);box-shadow:inset 0 0 28px #ffe3aa}
+.scope-action{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);width:126px;text-align:center;padding:8px 12px;background:#091921bf;border:1px solid #b7d6ce40;border-radius:3px}
+.scope-action strong{display:block;font-size:7px;letter-spacing:1.4px;color:#9effd2;margin-top:8px}.scope[data-state=cycling] .scope-action strong{color:#ffe0aa}
+.scope-bolt-track{position:relative;height:9px;width:74px;margin:auto;border-top:2px solid #6d8c8d;background:linear-gradient(90deg,transparent,#718f8b44,transparent)}
+.scope-bolt{position:absolute;left:6px;top:-3px;width:42px;height:5px;background:#aac8c0;border-right:5px solid #e0eee1;transform:translateX(calc(var(--scope-bolt)*23px))}
+.scope-bolt>div{position:absolute;right:2px;top:2px;width:3px;height:8px;background:#d5dfd3;transform-origin:top;transform:rotate(calc(var(--scope-lift)*-65deg))}
+.scope-ready-track{height:2px;background:#b5d8cc28;margin-top:8px;overflow:hidden}.scope-ready-track>div{height:100%;width:100%;background:#91d9b9}
+.scope-casing{position:absolute;left:calc(50% + 22vmin);top:calc(50% + 8vmin);width:12px;height:4px;border-radius:1px;background:linear-gradient(#ffdda0,#9c6730);border-left:2px solid #f8d7a0;opacity:var(--scope-casing);transform:translate(var(--scope-case-x,0px),var(--scope-case-y,0px)) rotate(var(--scope-case-turn,0deg));box-shadow:0 1px 3px #0008}
+@media(max-width:760px){.scope-action{bottom:9%;width:105px;padding:5px 8px}.scope-action strong{font-size:6px}.scope-circle>.scope-label{font-size:6px}.scope-rim{outline-offset:3px}}
