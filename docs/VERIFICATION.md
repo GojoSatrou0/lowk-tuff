@@ -1,5 +1,11 @@
 # Verification
 
+## Version 1.12 account grants and admin toys
+
+- All 127 tests pass. Added checks cover idempotent account-specific grants, console-command persistence, database restoration, unchanged coins/loadouts, invalid toy commands, target selection, movement prediction, role spoofing, host ownership, session matching, logout revocation, request cooldowns, reward suppression and HTTP/WebSocket replication.
+- An isolated browser fixture showed 22 unlocked items, host-only controls, the playground banner and active moon-gravity/big-head toggles. Targeted freeze and a self-launch were exercised in a hosted practice round. The previous playground match completed with zero coin rewards.
+- Public files contain no owner password, database URL, account snapshot or session token. The console grant script is not a public HTTP route.
+
 ## Version 1.11 four-slot and throwable update
 
 - All 119 tests pass, including category/ownership validation, version 3 disk/database migration, retained sessions and coins, grenade fuse/bounces on floors/ramps/thin cover, splash/parry checks, Molotov burn timing and expiry, and per-round charges.
