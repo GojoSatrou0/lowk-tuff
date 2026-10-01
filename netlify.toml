@@ -1,17 +1,9 @@
 [build]
-  publish = "."
+  command = "npm run build:netlify"
+  publish = "dist"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Content-Type-Options = "nosniff"
+[build.environment]
+  NODE_VERSION = "22"
 
-[[headers]]
-  for = "/service-worker.js"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
+# Set ARENA_SERVER_URL in Netlify's build environment to the hosted Node server.
+# The build checks its /health endpoint and writes the API proxy rules into dist.

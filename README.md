@@ -1,193 +1,183 @@
-# Open World Physics Lab — Multiplayer Rooms Update
+# Velocity Arena
 
-## New
-- The top-left info card and top-right Live Data card each have an X button.
-- A small SHOW HUD button restores both cards.
-- Multiplayer is now browser-to-browser instead of a placeholder screen.
-- Public Server 1, 2 and 3: the first browser in a room becomes the host; later browsers automatically join it.
-- Private rooms: create a short code and share it, or join someone else's code.
-- Connected players can see each other's position, facing and movement in the same world.
-- The in-game room bar shows the room code and player count.
+A standalone arena expansion built from the supplied **Open World Physics Lab – Central HTTPS Relay Start** archive. The original project is preserved in `starter/` in the full local package; it is excluded from deployment source. Its vector/matrix code and WebGL primitive generation form the foundation of the new renderer. The arena game, maps, interface, shared simulation, and server are new. Original archive documents are retained as reference, not treated as instructions or as proof that this version passes tests.
 
-## How multiplayer works
-This static website uses PeerJS/WebRTC. PeerJS Cloud handles the connection handshake; after the connection is made, game state is sent directly between browsers. The first player's browser is the room host. If that host closes the tab, that room ends.
+## Play on this computer
 
-Because this is browser-to-browser multiplayer, you can keep the same Netlify static-site deployment; no custom server account is required for this version.
+**Using Netlify?** See [Netlify setup](docs/NETLIFY.md). A static upload does not run the account/multiplayer backend. Deploy the Node server, then use `BUILD_NETLIFY.bat` or the Netlify build configuration to connect your existing site to it.
 
-## Deploy
-Replace your existing Netlify deploy with the files in this folder, exactly as with the previous version.
+1. Install **Node.js 22 or newer** if necessary.
+2. Double-click **START_GAME.bat**.
+3. Open **http://localhost:3000** in Chrome or Edge. Keep the launcher running.
+4. Choose a map, then **Free Play** to practice alone, **Enter the Arena** to face the bot, or **Play with a Friend** for a private 1v1.
 
+The launcher installs the server dependencies on first use and updates them when their pinned versions change. Once installed, solo and LAN matches need no external CDN, font, signaling service, or asset download. Do not open `index.html` directly with `file://`.
 
-## Grenade shockwave interaction
-- A grenade explosion now pushes other live grenades inside its blast radius.
-- The push direction is directly away from the explosion center.
-- Nearby grenades receive a stronger impulse; grenades near the edge receive a weaker one.
-- Pushed grenades tumble and continue their existing fuse/bounce behavior.
+Command-line equivalent:
 
+```sh
+npm ci
+npm start
+```
 
-## Destructible trees + improved weapon visuals
-- Trees have hit points and break into trunk/leaf debris.
-- Fictional blast forces can destroy nearby trees.
-- Grenades can bounce from tree trunks.
-- RPG projectiles and ray tools can hit trees.
-- Display names: RPG, Shotgun, Sniper Rifle.
-- First-person models are more detailed/proportional while remaining fictionalized game assets.
+## What is included
 
+- A redesigned live 3D lobby, armory, scoreboard, health/ammo HUD, and round/match screens.
+- **The Foundry:** balanced industrial lanes and four ramps to elevated side routes.
+- **Sunbreak:** canyon cover and raised flanking routes.
+- **Afterlight:** a neon rooftop, raised platforms, ramps, and a central bridge.
+- Material lighting, baked directional shadows, fog, detailed surfaces, distant scenery, muzzle flashes, tracers, hit markers, and generated sound effects.
+- Batched static geometry; Performance/Balanced/High quality settings.
+- Sprint, crouch, slide, momentum-carrying slide-jumps, coyote time, and one double jump.
+- **15 original weapons:** five free starters plus an unlockable burst rifle, revolver, dual pistols, bow, rocket launcher, katana, minigun, flamethrower, Shorty, and scythe.
+- A coin wallet, round/match rewards, permanent weapon unlocks, and five customizable weapon slots. Coins are earned through play; there are no real-money purchases.
+- Email/password accounts with public usernames, registration, sign-in, sign-out, and saved progress across devices on the same game server. Existing username accounts continue to work and can add an email. Guests can still play without an account.
+- Traveling arrows with gravity and aim-to-charge, three-shot bursts, rockets with cover-aware splash/self-damage and blast-jumping, and katana sprinting.
+- Katana parries, scythe dashes, minigun spin-up, and a cover-aware flame cone.
+- Weapon-specific firing animations: recoil/recovery, moving rifle bolts and pistol slides, cycling shotgun grip, rotating revolver cylinder and minigun barrels, bowstring release, melee swings, muzzle flashes, and ejected shells. Other players' guns also kick and flash when firing. Reduce Weapon Motion suppresses local recoil, gun cycling, katana/scythe motion, and shell ejection; the blade retains a smaller slash so attacks remain readable.
+- Center-camera shot rays, headshots, solid-cover occlusion, ADS FOV changes, FOV-scaled sensitivity, optional raw mouse input, and separate look/ADS settings.
+- Crosshair Studio with four shapes, live previews, color/size/gap/outline controls, and custom image import by file picker or drag-and-drop.
+- Magazine limits, cooldowns, weapon-switch delay, reloads, automatic fire, and reliable quick clicks between network updates.
+- First to **5 round wins**, 3-second countdowns, 90-second rounds, intermissions, and mutual-ready rematches. Higher remaining health wins a timed-out round; equal health is a draw.
+- **Free Play:** explore any map alone with no bots, timer, rounds, or scoring.
+- Solo opponent with pathfinding, strafing, cover checks, and three difficulty levels.
+- Dedicated-server 1v1 rooms with authenticated sessions. Server computes movement, collision, hits, ammo, health, round outcomes, and scores.
+- WebSockets with automatic HTTP/HTTPS polling fallback; compatibility mode can also be selected before joining. Both transports share the same rooms.
 
-## Visual weapon realism + casing update
-- All held game-tool models received more external visual detail and better proportions.
-- Carbine and Shotgun visibly eject spent casings/shells from the side when fired.
-- The Carbine has an arbitrary game-only 12-shot cycle: after 12 shots it pauses briefly, then can fire again.
-- This 12-shot behavior is a fictional gameplay setting, not a real weapon specification.
+This is an original movement arena inspired by fast duel games. It does not include Roblox assets or connect to Roblox.
 
+## Controls
 
-## Recoil + model realism pass
-- Added weapon-specific visual camera recoil with a spring-back response.
-- Carbine recoil is lighter; shotgun/sniper are heavier; RPG has its own visual kick.
-- Added slight side-to-side and roll variation for less robotic firing.
-- Viewmodels physically move back/up during firing.
-- Added another external/cosmetic model-detail pass for the Carbine, RPG, Shotgun, and Sniper.
-- All geometry and recoil values are fictional game tuning and are not real-world weapon measurements/specifications.
+| Action | Control |
+| --- | --- |
+| Move | WASD |
+| Sprint | Shift |
+| Jump / double jump | Space, then Space again |
+| Slide while moving / crouch | C or Ctrl |
+| Fire / melee | Left mouse |
+| Aim | Hold right mouse |
+| Draw bow | Hold right mouse to charge, then left-click to release |
+| Katana parry / scythe dash | Right mouse or F |
+| Reload | R |
+| Switch loadout slot | 1–5 or mouse wheel |
+| Pause / release mouse | Esc |
 
+Solo pauses in its menu. **Online matches continue while menus are open.** If a browser or embedded preview refuses mouse capture, a fallback button appears: use arrow keys or right-drag to look. A normal desktop browser with mouse capture is the intended FPS experience. Touch controls and gamepad controls are not implemented.
 
-## First-person view + model V3
-- Fixed the first-person camera being too low. It now sits at the rendered character's eye/head level instead of around torso height.
-- Third-person camera target and third-person firing origin were raised to match the upper body.
-- First-person weapons are held slightly higher and closer to the center so the visual aim matches the crosshair better.
-- Added another cosmetic exterior-detail pass to the Carbine, RPG, Shotgun, Sniper, and grenade.
-- Recoil, casings, destructible trees, grenade blast-push, multiplayer, health, and respawns remain.
-- Weapon geometry remains fictionalized game art; no real-world measurements or internal mechanisms are used.
+## Free Play
 
+Select any map in the lobby and click **Free Play**. You spawn immediately with your saved five-weapon loadout. Practice movement, ramps, aiming, firing, reloads, melee, and equipped abilities without opponents or a time limit. Health stays full, including after rocket jumps. Magazine sizes and reload timings work normally.
 
-## PvP + SMG + AK-47 + mouse wheel
-- Multiplayer rooms now support PvP hits and health damage between connected players.
-- PvP messages are relayed by the player acting as the room host, then health is synchronized through room snapshots.
-- Remote players have multiplayer hitboxes and health bars.
-- Grenade/RPG blast effects can damage other players in multiplayer rooms.
-- Slot 3 is now a Submachine Gun and keeps the SEMI/AUTO toggle plus the arbitrary 12-shot game pause.
-- Slot 5 is now an AK-47 game weapon, replacing the Physics Cannon.
-- Mouse wheel cycles through all six weapons while pointer-lock is active.
-- Weapon damage/range/recoil/model proportions are fictional game tuning, not real-world specifications.
+Press **Esc** to pause, open settings, leave, or choose **Reset Position & Ammo**. Reset returns you to spawn, restores all ammo, clears active projectiles and ability cooldowns, and keeps your selected weapon. Leave and select another map to change arenas.
 
+Free Play runs locally in your browser. It creates no multiplayer room and earns no coins or match progress. It uses your existing loadout rather than permanently unlocking weapons.
 
-## Smaller first-person weapons
-- First-person weapons are now scaled independently from third-person models.
-- They are moved farther forward, lower, and farther right so stocks/receivers do not cover the center of the screen.
-- Long weapons such as the Sniper, Shotgun, and RPG use smaller first-person scales.
-- Recoil translation, muzzle flashes, and casing positions were adjusted for the new layout.
-- Third-person player and weapon sizes are unchanged.
+## Blade attacks
 
+The Momentum Blade is a close-range melee weapon: select its loadout slot (5 in the starter kit) and left-click for a slash. Each click performs one attack with a 0.45-second cooldown and 2.8-unit reach. It consumes no ammo and cannot shoot projectiles or damage a distant player. Solid cover blocks its hit check.
 
-## Network compatibility / offline update (2026.08.13-compat1)
-- Solo no longer loads the multiplayer CDN library during initial page startup.
-- Multiplayer networking is loaded only when a player actually creates/joins a room.
-- Added a service worker and web-app manifest.
-- Core same-origin files are cached after a successful visit, allowing Solo to load from cache if the network is later unavailable.
-- Online requests use a network-first strategy so new Netlify deploys are picked up while cached files remain a fallback.
-- Added CONNECTION CHECK in the Multiplayer menu for online state, secure context, WebGL, WebRTC, cache state, multiplayer-library loading, and room-service status.
-- The PeerJS script is runtime-cached if it successfully loads during Multiplayer.
-- This improves normal network compatibility and does not attempt to bypass network access controls.
+The blade uses alternating diagonal cuts and a soft whoosh, with no gunshot, bullet tracer, muzzle flash, or gun recoil. Its new model has a tapered, beveled steel blade, finger guard, ribbed grip, fasteners, and pommel; other players see the model and swing too. Katana and scythe attacks also no longer use gunfire effects.
 
-## Fast focus-aim update
-- Hold right mouse button with the SMG, Shotgun, AK-47, or Sniper to enter a smooth focus-aim mode.
-- FOV transitions smoothly instead of snapping.
-- The first-person model slides toward the center while aiming.
-- Mouse sensitivity and viewmodel sway are reduced while aiming.
-- The crosshair tightens during aim; the Sniper transitions into its stronger scope overlay.
-- There is no target snapping or automatic aim assistance.
-- All tuning is fictional game behavior.
+## Custom crosshairs
 
-## Clearer-screen aim layout
-- Reduced first-person weapon scale again so the gun body stays out of the middle of the screen.
-- Moved hip-fire placement farther right, lower, and farther from the camera.
-- Changed the aim pose so it stays off-center instead of sliding too far into the middle.
-- Reduced first-person recoil travel while aiming.
-- Adjusted muzzle flash and casing positions to match the smaller layout.
+Open **Settings → Crosshair Studio** from the lobby, or **Esc → Aim & Settings → Crosshair Studio** during a match.
 
-## Fast arena movement update
-- Shift sprint remains available with sharper acceleration and braking.
-- Ctrl or C starts a slide when moving fast enough.
-- Jump during a slide preserves momentum and performs a slide-jump / slide-cancel style transition.
-- Added coyote time and jump buffering for responsive jumps.
-- Added air strafing and momentum preservation.
-- Terrain slopes can add a small downhill slide boost, making ramps and hills interact with momentum.
-- First-person camera lowers smoothly during crouch/slide and has a small landing dip.
-- Third-person and remote multiplayer players show lowered slide/crouch posture.
-- Live Data now shows the current movement state.
-- Values are original game tuning chosen to approximate the public RIVALS movement feel; they are not hidden/internal RIVALS values.
+- Choose Cross, Dot, Circle, or T-shape. Adjust the color or hex code, line length, thickness, center gap, outline, center dot, and opacity.
+- Turn movement/firing expansion off for a static crosshair. Optionally hide it while aiming; the sniper always retains its own scope.
+- Drag one existing image onto the drop area, or click **Choose Image**. PNG, SVG, WebP, and JPG are supported, up to 2 MB and 2048 × 2048 pixels. Transparent PNG/SVG images work best; JPG keeps its background.
+- **Background Cleanup** defaults to Auto: real transparency is preserved, while recognizable gray checkerboard pixels are converted to transparency. Some downloaded “transparent” images have a checkerboard baked into their pixels. This cleanup also applies to previously saved images after refreshing the game. Use **Keep original image** to undo it, or choose checkerboard, dark-background, or light-background cleanup manually. The Cleanup Amount slider removes residual background noise; reduce it if faint details disappear. Detection is intended for regular gray grids; irregular/textured backgrounds may need external editing.
+- Uploaded images have size, rotation, horizontal offset, and vertical offset controls. Center guides show the actual aim point; the three map backgrounds help check visibility. Shape color/outline controls apply only to built-in shapes.
+- Switch between a built-in shape and **Use Uploaded Image** without losing the image. **Remove** deletes the saved image; **Reset to Default** restores the stock crosshair and retains the image for reuse.
 
-## Third-person + crouch/slide animation update
-- Added actual crouch body posing: lowered torso/head, bent knees, repositioned feet and arms.
-- Added an asymmetric sliding pose with one leg extended, one leg tucked, lowered torso, and forward body lean.
-- Remote multiplayer players use matching crouch/slide poses and lowered PvP hitboxes.
-- Third-person camera is now over-the-shoulder so the player model stays left of the center crosshair instead of blocking it.
-- Right-click aiming now works in third person for SMG, Shotgun, AK-47, and Sniper.
-- Third-person aim uses a moderate zoom instead of the first-person sniper scope overlay.
-- Third-person weapon direction is derived from the center-screen aim point; the held weapon and arm pose follow that direction.
-- Rays/projectiles in third person originate from the character weapon position and converge on the center crosshair target.
+Changes save automatically in this browser for this server address and work in solo and online games. Clearing browser site data removes them. Imports are processed locally, normalized to PNG (maximum 512 pixels), and never sent to the multiplayer server. SVG imports retain drawing elements and strip scripts/external content; SVGs requiring unsupported effects should be exported to PNG first. Invalid images leave the current crosshair unchanged. If browser storage is unavailable, changes work for the current session and the editor reports that they could not be saved.
 
-## Imported KSR-29 sniper model
-- Replaced the procedural Sniper Rifle visual with the supplied KSR-29 GLB when the asset is available.
-- The custom WebGL renderer now supports UV-textured imported meshes while retaining the original solid-color renderer for the rest of the game.
-- The KSR-29 is used in both first-person and third-person.
-- First-person positioning remains compact so the imported model does not dominate the screen.
-- Third-person uses the existing shoulder aim direction and aligns the imported mesh with the gun/arm pose.
-- The old procedural sniper remains as an automatic fallback if the GLB fails to load.
-- The GLB is included in the PWA cache so it can remain available in cached Solo mode after the first successful load.
+## Coins and the armory
 
-## KSR-29 runtime cleanup update
-- The sniper loader now post-processes the imported KSR-29 mesh on load.
-- Scope cluster is lowered back onto the rifle body.
-- Stand/bipod pieces are removed.
-- The protruding ammo/mag-style piece is removed.
-- Third-person shoulder camera is swapped so the player appears on the right side of the screen.
-- First-person and third-person sniper anchors are nudged for the cleaned model.
+New wallets start with **100 coins**. Untouched wallets from the 300-coin version are adjusted to 100; wallets with earned coins, purchases, or equipment changes retain their progress. Open **Armory** or the gold coin counter, unlock a weapon, select one of the five slots, and click **Equip in slot**. Equipping a weapon already in another slot swaps the two. Leave your room before changing equipment. Each profile can occupy one room at a time.
 
+| Reward | Coins |
+| --- | ---: |
+| Round win | 35 |
+| Round loss | 10 |
+| Match win bonus | 120 |
+| Match loss bonus | 40 |
 
-## Run locally without uploading
+The final round awards both its round reward and the match bonus once. Draws give no coins. A 5–0 winner earns 295; the losing player earns 90. Leaving early gives no completion bonus, but keeps rewards already received. Server-hosted solo and online duels both earn coins; static/offline practice cannot award them.
 
-1. Extract the ZIP.
-2. Double-click `START_GAME.bat`.
-3. The game opens automatically in your browser.
-4. Keep the launcher window open while playing.
-5. Press `Ctrl+C` in the launcher window to stop the local server.
+| Unlock | Price | Play style |
+| --- | ---: | --- |
+| Triad Burst | 275 | Three shots per trigger press |
+| Ironclad Revolver | 150 | Accurate, heavy semi-auto sidearm |
+| Twin Sparks | 225 | Fast alternating dual pistols |
+| Arc Bow | 350 | Charged arrows that travel and drop |
+| Comet Launcher | 450 | Rockets, cover-aware splash, and blast jumps |
+| Gale Katana | 300 | Faster sprint and timed parry |
+| Cyclone Minigun | 425 | 0.55-second spin-up, 90 rounds, reduced movement speed |
+| Ember Flamethrower | 375 | Short-range cone of fire, 60 fuel |
+| Pocket Shorty | 100 | Two fast blasts of ten pellets each |
+| Rift Scythe | 325 | Long melee reach and a directional dash |
 
-This uses a local HTTP server because browser features such as the GLB asset loader and service worker should not be run directly from a `file://` page.
+**Katana parry:** press right mouse or **F** with the katana equipped. The 0.75-second guard blocks bullets, sniper shots, shotgun pellets, arrows, and flames from any direction. RPG/rocket direct hits and explosions, the blade, another katana, and the scythe still deal damage. You cannot slash during the guard. Its cooldown is 2.2 seconds from activation; holding the button does not repeat it. Switching weapons cancels the guard without clearing the cooldown. It blocks damage rather than reflecting it back.
 
-## Video-reported sniper correction
-- Rebuilt the imported KSR-29 from its named source objects instead of guessing connected pieces.
-- Kept only the main rifle + scope. Removed the separate stand/bipod object and the separate ammo/mag-style object.
-- Lowered the scope object onto the rifle body.
-- Restored the unscoped first-person rifle to the normal lower/right viewmodel anchor.
-- Hides the 3D rifle while the first-person sniper scope overlay is fully active, so the model cannot block the scope view.
-- Third-person player remains on the left side of the screen.
+**Scythe dash:** press right mouse or **F** while holding a movement direction, or dash forward if stationary. It lasts 0.18 seconds with a 2.8-second cooldown, respects map collision, and grants no invulnerability. Switching between katana and scythe retains the current ability cooldown.
 
+The new weapon types are inspired by the [Rivals weapon roster](https://robloxrivals.fandom.com/wiki/Weapons); names, models, prices, and balance are original to this project.
 
-## Multiplayer compatibility update (2026.08.19-school-mp-compat1)
+Locally, the server saves coins, unlocks, loadouts, and accounts in **`data/profiles.json`**. Cloud hosting uses **Neon Free Postgres** when `DATABASE_URL` is configured. Guest wallets use a private browser token; create an account to recover your progress on another device. Never share wallet tokens or include the data folder in a public repository/ZIP.
 
-- Two normal PeerJS CDN sources are tried instead of relying on one source.
-- Connection Check now tests the actual room/signaling service.
-- Connection timeout is longer for slow networks.
-- The service worker caches whichever PeerJS runtime source loads successfully.
-- `multiplayer-config.js` is an empty hook for administrator-approved ICE/TURN settings if a managed network requires a relay.
-- This build does not bypass network restrictions; a firewall can still block browser-to-browser WebRTC.
+For free hosting, use **Render Free + Neon Free** as described in [Netlify setup](docs/NETLIFY.md). Database commits preserve accounts across server sleep and replacement. Local disk hosting can use `DATA_DIR`; never rely on a temporary filesystem. See [hosting persistence](docs/MULTIPLAYER.md#keep-coins-after-redeploying). Prices and rewards live in `src/shared.js` and `src/economy.js`.
 
+## Multiplayer
 
-## Built-in LAN multiplayer (2026.08.20-lan-relay-mp1)
+**Same network:** run the server on one computer. Both players open `http://HOST-LAN-IP:3000`, e.g. `http://192.168.1.20:3000`. Use `ipconfig` to find that computer's active IPv4 address. If Windows asks, allow Node on your trusted private network. Create a room, share its six-character code, join, and both click **I'm ready**. Do not send another computer a `localhost` link: localhost always refers to that player's own computer.
 
-START_GAME.bat now starts a local relay. Friends on the same Wi-Fi open the LAN address shown in the launcher, then everyone chooses Multiplayer and the same room code. LAN is used automatically when available; WebRTC remains the fallback on normal hosting. This cannot override a school firewall or Wi-Fi client isolation.
+**Over the internet:** deploy this entire folder as one Node **web service**, then both use its HTTPS address. A static host alone cannot run this server. Ready-to-use `render.yaml` and `Dockerfile` are included. See [the deployment and restricted-network guide](docs/MULTIPLAYER.md).
 
-### How to use LAN multiplayer at school
+Rooms are in memory, limited to two players, and expire when empty. Restarting the server ends current rooms; saved accounts and wallets remain in Neon, or on a retained local data disk. Leaving or timing out returns the remaining player to the lobby and resets the match. There is no ranked matchmaking, teams, career stats, or host migration between servers.
 
-- One computer extracts the ZIP and runs `START_GAME.bat`.
-- The launcher opens the game for the host and prints a LAN address such as `http://192.168.1.24:8765/`.
-- Other players on the same Wi-Fi open that address in Chrome/Edge.
-- Everyone chooses Multiplayer and uses the same room code.
-- The game automatically chooses the LAN relay when it can reach it; otherwise it keeps the existing online WebRTC method.
-- Keep the launcher window open while playing.
+## Development
 
-If Windows Firewall asks whether Python may accept network connections, only allow it if that is permitted on the network. Some managed Wi-Fi systems use client isolation, which prevents one student device from reaching another; software in the ZIP cannot override that network setting.
+```sh
+npm run check
+npm test
+```
 
+| File | Role |
+| --- | --- |
+| `src/shared.js` | Maps, physics, weapon rules, raycasts, match simulation shared with Node |
+| `src/renderer.js` | Starter-derived WebGL meshes plus the new batched renderer, shadows, scene, and weapons |
+| `src/math.js` | Math retained from the supplied starter |
+| `src/game.js` | Input, menus, settings, HUD, solo loop, network reconciliation, audio |
+| `src/network.js` | Session setup, WebSockets, polling fallback, connection errors |
+| `src/shop.js` | Armory UI, wallet connection, purchases, and loadout selection |
+| `src/economy.js` | Prices validation, starter wallet, equipment rules, reward amounts |
+| `profile-store.js` | Server-only account, session, and wallet persistence |
+| `src/accounts.js` | Registration, sign-in, sign-out, and account UI |
+| `src/bot.js` | Solo pathfinding and opponent behavior |
+| `server.js` | HTTP/static server, sessions, rooms, 60 Hz simulation, 20 Hz WS snapshots |
+| `tests/` | Rules and real HTTP/WebSocket integration checks |
+| `starter/` | Original files and supplied GLB, preserved unchanged |
 
-## Central HTTPS relay
-Multiplayer now tries: Central HTTPS relay -> LAN relay -> PeerJS/WebRTC. The central relay uses ordinary HTTPS requests, not direct browser-to-browser connections. Host `central-relay-server/`, then run `SET_CENTRAL_RELAY_URL.bat` and paste its HTTPS URL. This does not override network restrictions.
+`tests/make-previews.js` regenerates the map-card SVGs after layout changes.
+
+See [verification notes](docs/VERIFICATION.md) for tested behavior and known limits. This is a playable foundation for private duels, not a production ranked shooter. The server owns gameplay state, but there is no lag compensation, matchmaking service, replay system, or commercial anti-cheat.
+
+## Accounts and signing in
+
+1. Click **SIGN IN** at the top right, then **CREATE ACCOUNT**.
+2. Choose a public username (3–20 letters, numbers, or underscores), enter your email, and create a game password of 15–128 characters. A memorable phrase works well. Confirm the password and create the account. Your email is private and is not included in multiplayer snapshots.
+3. Your current guest coins, unlocks, and loadout become that account's progress. This does not award another 100 coins. Brand-new players start with 100.
+4. On another device, open the **same game server's address** and sign in with your email or username and game password. Email and username matching ignore case. Signing into an existing account loads that account's wallet; it does not merge guest coins.
+5. Click your username to see your account or **SIGN OUT**. Sign-out returns to a fresh guest wallet and retains the account's saved progress. It also leaves any room associated with that sign-in. Other devices remain signed in.
+
+Sign-in lasts up to 30 days, including server restarts when the database or local data directory persists. Crosshairs and control settings remain browser preferences. Accounts are specific to this server; they do not connect to Roblox. There is currently no email verification, password reset, or password-change screen, so keep your password somewhere safe.
+
+**Already have a username-only account?** Sign in with that username, click your account button, and use **ADD EMAIL SIGN-IN**. Confirm your current game password to save the email without losing coins or weapons. An email can belong to only one account. This version allows adding a first email, not replacing an existing one.
+
+Email is a sign-in identifier here, not proof of mailbox ownership. No email is sent. Verification links and password-reset emails need an email delivery service and an additional verified ownership workflow; do not use the unverified email field for automatic recovery or linking other services. Email validation uses [validator.js](https://github.com/validatorjs/validator.js/); case is folded for comparison, internationalized domains use ASCII form, and dots/plus tags are retained, following a documented comparison policy as recommended in the [OWASP email guidance](https://cheatsheetseries.owasp.org/cheatsheets/Email_Validation_and_Verification_Cheat_Sheet.html).
+
+Passwords are stored as salted scrypt hashes, following an [OWASP scrypt configuration](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#scrypt). Account session tokens use HttpOnly, SameSite cookies; the browser never stores the password or account session token in localStorage. Guest tokens stop working once their wallet is claimed by an account. The upgrade preserves old guest wallets/accounts and makes a `profiles.json.v1.bak` or `profiles.json.v2.bak` before migrating the database.
+
+Use HTTPS and persistent storage for a shared internet server. See [account hosting](docs/MULTIPLAYER.md#accounts-on-a-hosted-server) for the required configuration.
+
+If an older signup screen says **Unexpected token '<' / DOCTYPE / not valid JSON**, it received an HTML page in place of API data. Restart the updated project's `START_GAME.bat`, then refresh the game. Version 1.6 sends account operations through the main `/api` endpoint, checks server capabilities before submitting credentials, and handles HTML/incomplete responses with a readable message. A static file server cannot handle accounts or multiplayer.

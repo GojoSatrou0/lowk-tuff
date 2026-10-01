@@ -1,190 +1,112 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101923">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="app-icon.svg" type="image/svg+xml">
-<title>Open World Physics Lab</title>
-<style>
-:root{
-  color-scheme:dark;
-  --panel:rgba(12,16,22,.82);
-  --line:rgba(151,174,199,.18);
-  --text:#eef4f8;
-  --muted:#9eacb9;
-  --accent:#71bdff;
-}
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 14%,rgba(255,244,198,.58),rgba(255,244,198,0) 18%),linear-gradient(180deg,#88c1f0 0%,#b5dff5 35%,#d6ecf7 58%,#91b87b 100%);font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--text)}
-#gl{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none}
-.card{background:linear-gradient(180deg,rgba(18,24,32,.84),rgba(10,14,20,.76));border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(10px);box-shadow:0 10px 34px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.05)}
-.title{position:fixed;left:14px;top:14px;padding:12px 38px 12px 14px;max-width:390px;pointer-events:none;transition:.18s ease}
-.title h1{font-size:16px;letter-spacing:.09em;margin:0 0 5px}.title p{font-size:12px;line-height:1.5;color:var(--muted);margin:0}
-.data{position:fixed;right:14px;top:14px;width:260px;padding:12px 38px 12px 14px;pointer-events:none;transition:.18s ease}.data h2{margin:0 0 8px;font-size:12px;letter-spacing:.07em;color:#dce7ef}
-.metric{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--muted)}.metric strong{color:var(--text);font-variant-numeric:tabular-nums}
-.note{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:11px;line-height:1.45;color:#95a4b3}
-.status{position:fixed;left:14px;bottom:14px;padding:8px 11px;border-radius:999px;font-size:12px;color:var(--muted);pointer-events:none}
-.cross{position:fixed;left:50%;top:50%;width:24px;height:24px;margin:-12px 0 0 -12px;pointer-events:none;opacity:.88;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
-.cross:before,.cross:after{content:"";position:absolute;background:white;border-radius:999px;box-shadow:0 0 5px rgba(0,0,0,.4)}.cross:before{width:2px;height:18px;left:11px;top:3px}.cross:after{height:2px;width:18px;left:3px;top:11px}.dot{position:absolute;width:4px;height:4px;background:#fff;border-radius:50%;left:10px;top:10px;box-shadow:0 0 6px rgba(255,255,255,.45)}
-.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .08s linear}
-.lockHint{position:fixed;left:50%;top:63%;transform:translate(-50%,-50%);padding:10px 14px;font-size:12px;color:#dce8f2;pointer-events:none}
-.toolbelt{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:7px;padding:7px;pointer-events:none}
-.toolslot{min-width:96px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:rgba(10,14,19,.76);color:var(--muted);font-size:11px;text-align:center;transition:.12s}
-.toolslot b{display:block;color:#dce9f4;font-size:12px;margin-bottom:2px}.toolslot.active{border-color:rgba(113,189,255,.9);background:linear-gradient(180deg,rgba(41,91,128,.92),rgba(29,63,90,.88));box-shadow:0 0 24px rgba(80,165,235,.22), inset 0 1px 0 rgba(255,255,255,.08)}
-@media(max-width:760px){.data{display:none}.title{max-width:285px}.toolslot{min-width:72px;font-size:9px}.toolslot b{font-size:10px}}
-
-.scope{position:fixed;inset:0;display:none;pointer-events:none;z-index:8;background:radial-gradient(circle at center,transparent 0 27%,rgba(0,0,0,.16) 28%,rgba(0,0,0,.92) 48%,#000 72%)}
-.scope.on{display:block}
-.scope .ring{position:absolute;left:50%;top:50%;width:min(70vw,70vh);height:min(70vw,70vh);transform:translate(-50%,-50%);border:2px solid rgba(10,12,14,.92);border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 20px rgba(0,0,0,.45)}
-.scope .h,.scope .v{position:absolute;left:50%;top:50%;background:rgba(10,12,14,.88);transform:translate(-50%,-50%)}
-.scope .h{width:min(70vw,70vh);height:1px}.scope .v{height:min(70vw,70vh);width:1px}
-.scope .tick{position:absolute;left:50%;top:55%;transform:translateX(-50%);width:7px;height:7px;border:1px solid rgba(10,12,14,.9);border-radius:50%}
-
-
-.menuScreen{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:radial-gradient(circle at 50% 18%,rgba(123,198,255,.18),transparent 32%),linear-gradient(180deg,rgba(4,8,13,.48),rgba(4,7,11,.86));backdrop-filter:blur(7px)}
-.menuScreen.hidden{display:none}
-.menuPanel{width:min(620px,calc(100vw - 34px));padding:28px;border-radius:24px;background:linear-gradient(180deg,rgba(19,27,37,.96),rgba(8,12,18,.95));border:1px solid rgba(173,204,230,.20);box-shadow:0 30px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.06)}
-.menuKicker{font-size:11px;letter-spacing:.22em;color:#79c5ff;margin-bottom:9px}
-.menuPanel h1{margin:0;font-size:34px;letter-spacing:.035em}
-.menuPanel>p{margin:10px 0 22px;color:#9fb0bf;font-size:14px;line-height:1.55}
-.modeGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.modeButton{appearance:none;border:1px solid rgba(155,190,218,.18);border-radius:17px;background:linear-gradient(180deg,rgba(38,52,67,.92),rgba(20,29,39,.94));color:#eef7ff;padding:20px;text-align:left;cursor:pointer;transition:.16s;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.modeButton:hover{transform:translateY(-2px);border-color:rgba(113,189,255,.66);box-shadow:0 12px 28px rgba(0,0,0,.22)}
-.modeButton b{display:block;font-size:18px;margin-bottom:5px}.modeButton span{display:block;color:#9fb1c0;font-size:12px;line-height:1.45}
-.modeButton.primary{background:linear-gradient(180deg,rgba(38,102,145,.96),rgba(23,69,102,.95));border-color:rgba(116,199,255,.56)}
-.mpPanel{display:none;margin-top:15px;padding:16px;border-radius:16px;background:rgba(4,8,13,.42);border:1px solid rgba(156,186,210,.14)}
-.mpPanel.on{display:block}.mpRow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.mpButton,.backButton{border:1px solid rgba(145,181,210,.18);border-radius:11px;background:rgba(27,38,49,.9);color:#dfeaf2;padding:11px;cursor:pointer}
-.mpNote{margin:11px 0 0;color:#91a2b1;font-size:12px;line-height:1.5}#mpStatus{color:#7cc7ff}
-.healthHud{position:fixed;left:14px;bottom:58px;z-index:9;width:225px;padding:10px 12px;pointer-events:none}
-.healthTop{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#a8bac8;margin-bottom:7px}.healthTop strong{font-size:13px;color:#f2f7fa}
-.healthTrack{height:9px;border-radius:999px;background:rgba(0,0,0,.42);overflow:hidden;border:1px solid rgba(255,255,255,.07)}
-.healthFill{height:100%;width:100%;border-radius:999px;background:linear-gradient(90deg,#53bf78,#91df7c);box-shadow:0 0 12px rgba(80,203,116,.20);transition:width .16s ease}
-@media(max-width:650px){.modeGrid{grid-template-columns:1fr}.menuPanel h1{font-size:27px}.healthHud{width:190px}}
-
-
-.panelClose{position:absolute;right:8px;top:8px;width:24px;height:24px;border:1px solid rgba(160,190,215,.16);border-radius:8px;background:rgba(5,9,13,.38);color:#b9cad7;font-size:16px;line-height:20px;cursor:pointer;pointer-events:auto}
-.panelClose:hover{background:rgba(52,79,100,.72);color:white}.panelHidden{opacity:0!important;transform:translateY(-10px);visibility:hidden;pointer-events:none!important}
-.hudRestore{position:fixed;right:14px;top:14px;z-index:15;display:none;border:1px solid rgba(123,190,235,.35);border-radius:10px;background:rgba(12,22,31,.88);color:#dcecf7;padding:7px 10px;font-size:11px;cursor:pointer}.hudRestore.on{display:block}
-.serverGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.serverButton{border:1px solid rgba(112,189,239,.26);border-radius:11px;background:linear-gradient(180deg,rgba(33,67,91,.9),rgba(20,43,60,.9));color:#dcecf7;padding:11px 8px;cursor:pointer}.serverButton:hover{border-color:rgba(112,189,239,.72)}
-.roomRow{display:grid;grid-template-columns:1fr auto auto;gap:7px;margin-top:10px}.roomInput{min-width:0;border:1px solid rgba(150,183,210,.2);border-radius:10px;background:rgba(7,11,16,.72);color:#e5f1fa;padding:10px 11px;outline:none;text-transform:uppercase}.roomInput:focus{border-color:rgba(112,189,239,.68)}
-.roomHud{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:14;display:none;align-items:center;gap:9px;padding:7px 10px;font-size:11px;color:#aebfcb;pointer-events:auto}.roomHud.on{display:flex}.roomHud strong{color:#e8f6ff}.roomLeave{border:0;border-radius:7px;background:rgba(123,52,52,.62);color:#ffdede;padding:5px 7px;cursor:pointer}
-.remoteTag{display:none}
-@media(max-width:650px){.serverGrid{grid-template-columns:1fr}.roomRow{grid-template-columns:1fr 1fr}.roomInput{grid-column:1/-1}}
-
-
-.diagButton{margin-top:12px;width:100%;border:1px solid rgba(120,191,238,.26);border-radius:11px;background:rgba(24,44,59,.86);color:#dcecf7;padding:10px;cursor:pointer}
-.diagButton:hover{border-color:rgba(120,191,238,.68)}
-.diagPanel{display:none;margin-top:11px;padding:12px;border-radius:13px;background:rgba(5,9,14,.46);border:1px solid rgba(150,184,210,.14)}
-.diagPanel.on{display:block}
-.diagTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;font-size:11px;letter-spacing:.10em;color:#cfe0eb}
-.diagRow{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid rgba(150,184,210,.08);font-size:11px;color:#9fb1c0}
-.diagRow:last-child{border-bottom:0}.diagRow strong{font-weight:700;color:#dcebf5;text-align:right}
-.diagGood{color:#82d99a!important}.diagWarn{color:#efc267!important}.diagBad{color:#f08b83!important}
-.diagNote{margin:8px 0 0;color:#899aa8;font-size:10px;line-height:1.45}
-.offlineBadge{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:5px 8px;border-radius:999px;background:rgba(36,77,58,.42);border:1px solid rgba(111,205,144,.22);color:#aee7c1;font-size:10px}
-.offlineDot{width:6px;height:6px;border-radius:50%;background:#7bd89b;box-shadow:0 0 8px rgba(123,216,155,.45)}
-
-
-.cross{transition:transform .12s ease,opacity .12s ease,filter .12s ease;transform-origin:center}
-.cross.aiming{transform:scale(.58);opacity:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.65))}
-.cross.sniperAim{opacity:0}
-.aimVignette{position:fixed;inset:0;pointer-events:none;z-index:7;opacity:0;transition:opacity .12s ease;background:radial-gradient(circle at center,transparent 0 46%,rgba(5,9,13,.045) 70%,rgba(5,9,13,.16) 100%)}
-.aimVignette.on{opacity:1}
-
-</style>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111c23"><meta name="description" content="Velocity Arena — a fast, first-to-five arena FPS. Slide, double jump, and own the high ground.">
+  <title>Velocity Arena · Move with intent.</title>
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<canvas id="gl" tabindex="0"></canvas>
-
-<div id="mainMenu" class="menuScreen">
-  <div class="menuPanel">
-    <div class="menuKicker">OPEN WORLD PHYSICS LAB</div>
-    <h1>Choose a mode</h1>
-    <p>Choose Solo, or enter a browser-to-browser multiplayer room. Public rooms automatically become active when the first player opens them.</p><div class="offlineBadge"><span class="offlineDot"></span><span>SOLO CACHE / PWA READY</span></div>
-    <div class="modeGrid">
-      <button id="soloBtn" class="modeButton primary"><b>SOLO</b><span>Play the solo world. Defeated enemies return after 30 seconds.</span></button>
-      <button id="multiBtn" class="modeButton"><b>MULTIPLAYER</b><span>Join a public room or create a room code and share it with friends. PvP is enabled inside multiplayer rooms.</span></button>
+  <canvas id="world" tabindex="-1" aria-label="Velocity Arena 3D game"></canvas>
+  <div class="screen-grain" aria-hidden="true"></div>
+  <main id="menu" class="menu">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Velocity Arena home"><img src="app-icon.svg" alt=""><span>VELOCITY<small>ARENA</small></span></a>
+      <nav aria-label="Main"><button class="nav-link active" data-view="play">PLAY</button><button class="nav-link" data-view="armory">ARMORY <span data-weapon-count>15</span></button><button class="nav-link" id="settings-open">SETTINGS</button></nav>
+      <div class="profile"><span class="online-dot"></span><span id="server-label">CHECKING SERVER</span><button id="wallet-open" class="wallet-chip" aria-label="Open coin shop"><b>◈</b> <strong data-wallet>100</strong></button><button id="account-open" class="account-chip" aria-label="Sign in or create account">SIGN IN</button></div>
+    </header>
+    <div id="play-view" class="play-view">
+      <section class="hero">
+        <div class="eyebrow"><span></span> THE MOVEMENT-FIRST ARENA</div>
+        <h1>STAY QUICK.<br><em>HIT FIRST.</em></h1>
+        <p>Find your angle. Chain your movement.<br>Five rounds to prove it.</p>
+        <div class="mode-pills"><span>1V1 DUELS</span><i></i><span>FIRST TO 5</span><i></i><span>NO DOWNLOAD</span></div>
+        <div class="play-actions"><button id="solo" class="button primary"><span>ENTER THE ARENA<small>SOLO VS. BOT</small></span><b>↗</b></button><button id="friends" class="button secondary"><span>PLAY WITH A FRIEND<small>PRIVATE ONLINE DUEL</small></span><b>＋</b></button></div>
+        <button id="freeplay" class="button freeplay-button"><span>FREE PLAY<small>NO BOTS · UNLIMITED PRACTICE</small></span><b>↗</b></button>
+        <div class="hero-note"><span class="key tiny">W</span><span class="key tiny">A</span><span class="key tiny">S</span><span class="key tiny">D</span><span>Move fast. The rest is up to you.</span></div>
+      </section>
+      <aside class="scene-label"><span>LIVE ARENA PREVIEW</span><strong id="preview-name">THE FOUNDRY</strong><small id="preview-subtitle">INDUSTRIAL / BALANCED</small><div class="scene-line"></div><span class="scene-number" id="preview-index">01 / 03</span></aside>
+      <section class="map-section"><div class="section-heading"><h2>CHOOSE YOUR GROUND <span>03 MAPS</span></h2><span>DIFFERENT ROUTES. SAME STAKES.</span></div><div class="map-grid" id="map-grid"></div></section>
+      <footer><span><i class="online-dot"></i> BUILT FOR THE NEXT ROUND.</span><span>SLIDE <b>C</b> <i> / </i> DOUBLE JUMP <b>SPACE ×2</b> <i> / </i> AIM <b>RMB</b></span><span>VOL. 01 <i>—</i> ARENA EXPANSION</span></footer>
     </div>
-    <div id="mpPanel" class="mpPanel">
-      <div class="menuKicker">PUBLIC ROOMS</div>
-      <div class="serverGrid">
-        <button class="serverButton" data-public-room="PUBLIC-1">SERVER 1</button>
-        <button class="serverButton" data-public-room="PUBLIC-2">SERVER 2</button>
-        <button class="serverButton" data-public-room="PUBLIC-3">SERVER 3</button>
-      </div>
-      <div class="menuKicker" style="margin-top:14px">PRIVATE ROOM</div>
-      <div class="roomRow">
-        <input id="roomCodeInput" class="roomInput" maxlength="12" placeholder="ROOM CODE">
-        <button id="hostBtn" class="mpButton">CREATE</button>
-        <button id="joinBtn" class="mpButton">JOIN</button>
-      </div>
-      <p class="mpNote"><span id="mpStatus">Choose a public server, or create/join a private room.</span><br><span id="relayHint">Checking central relay…</span><br><span id="lanHint">Checking for the built-in LAN relay…</span></p>
-      <button id="diagButton" class="diagButton">CONNECTION CHECK</button>
-      <div id="diagPanel" class="diagPanel">
-        <div class="diagTitle"><span>CONNECTION DIAGNOSTICS</span><span id="diagBuild">2026.08.20-central-https-relay1</span></div>
-        <div class="diagRow"><span>Website connection</span><strong id="diagOnline">CHECKING</strong></div>
-        <div class="diagRow"><span>Secure browser context</span><strong id="diagSecure">CHECKING</strong></div>
-        <div class="diagRow"><span>WebGL</span><strong id="diagWebgl">CHECKING</strong></div>
-        <div class="diagRow"><span>WebRTC support</span><strong id="diagWebrtc">CHECKING</strong></div>
-        <div class="diagRow"><span>Offline game cache</span><strong id="diagCache">CHECKING</strong></div>
-        <div class="diagRow"><span>Multiplayer library</span><strong id="diagPeer">NOT LOADED</strong></div>
-        <div class="diagRow"><span>Central HTTPS relay</span><strong id="diagRelay">NOT CONFIGURED</strong></div>
-        <div class="diagRow"><span>LAN relay</span><strong id="diagLan">CHECKING</strong></div>
-        <div class="diagRow"><span>Room service</span><strong id="diagSignal">NOT TESTED</strong></div>
-        <p class="diagNote">Multiplayer prefers a configured central HTTPS relay, then the built-in LAN relay, then the normal online/WebRTC room system.</p>
-      </div>
-      <button id="backBtn" class="backButton">BACK</button>
+    <section id="armory-view" class="armory-view" hidden><div class="eyebrow">EARN YOUR NEXT FAVORITE.</div><div class="armory-title"><h1>THE ARMORY<span data-weapon-count>15</span></h1><div class="shop-wallet"><small id="wallet-state">CONNECTING WALLET</small><strong>◈ <span data-wallet>100</span></strong><span>COINS</span></div></div><p>Win rounds. Stack coins. Build your five-weapon kit.</p><div class="earn-strip"><b id="starting-coins">100 COINS TO START</b><span id="reward-rules"></span><small>Earn in solo & online matches. No real money.</small></div><div class="loadout-heading"><h2>YOUR LOADOUT</h2><span>SELECT A SLOT, THEN EQUIP A WEAPON BELOW.</span></div><div class="loadout-slots" id="loadout-slots"></div><div id="weapon-grid" class="weapon-grid"></div><button class="button primary" id="armory-back">BACK TO PLAY <b>↗</b></button></section>
+  </main>
+  <section id="hud" class="hud" hidden aria-label="Game status">
+    <div class="hud-top-left"><span class="brand-mini">V / ARENA</span><strong id="hud-map">THE FOUNDRY</strong><small id="connection">SOLO PRACTICE</small><div class="hud-wallet">◈ <b data-wallet>100</b><span id="coin-gain"></span></div></div>
+    <div id="freeplay-status" class="freeplay-status" hidden><strong>FREE PLAY</strong><span>NO BOTS · NO TIME LIMIT</span><small>ESC · RESET OR LEAVE</small></div>
+    <div id="match-score" class="match-score"><div class="score-side"><span id="your-name">YOU</span><strong id="your-score">0</strong><div id="your-dots" class="score-dots"></div></div><div class="round-clock"><span id="round-label">ROUND 01</span><strong id="clock">01:30</strong><small>FIRST TO 5</small></div><div class="score-side opponent"><span id="their-name">RIVAL</span><strong id="their-score">0</strong><div id="their-dots" class="score-dots"></div></div></div>
+    <div class="hud-top-right"><span id="fps">60 FPS</span><span id="ping">LOCAL</span><small>MENU <b>ESC</b></small></div>
+    <canvas id="crosshair" class="crosshair" width="256" height="256" aria-hidden="true"></canvas><div id="hitmarker" class="hitmarker">×</div><div id="damage-vignette"></div>
+    <div id="scope" class="scope" hidden><div class="scope-circle"><i></i><b></b><span>LONGSHOT / 4×</span></div></div>
+    <div id="round-banner" class="round-banner" hidden><span id="banner-kicker">GET READY</span><h2 id="banner-title">3</h2><p id="banner-note">Find your next angle.</p></div>
+    <div class="hud-bottom"><div class="health"><div><span>VITALS</span><strong id="health-value">100</strong><b>＋</b></div><div class="health-track"><i id="health-bar"></i></div><small id="movement-state">READY TO MOVE</small></div><div class="weapon-belt" id="weapon-belt"></div><div class="ammo"><span id="weapon-name">V-24 CARBINE</span><div><strong id="ammo-value">24</strong><small id="ammo-max">/ 24</small></div><span id="reload-label">RELOAD <b>R</b></span></div></div>
+    <div id="ability" class="ability" hidden><span id="ability-name">KATANA PARRY</span><strong id="ability-state">READY · RMB / F</strong><div><i id="ability-fill"></i></div><small id="ability-note">ROCKETS & MELEE BYPASS</small></div>
+    <div id="speed" class="speed"><span>VELOCITY</span><strong>0.0</strong><small>M/S</small></div>
+    <div id="combat-feed" class="combat-feed"></div>
+  </section>
+  <div id="pause" class="overlay" hidden><section class="dialog pause-dialog"><div class="eyebrow">TAKE A BREATH</div><h2>BACK IN A MOMENT.</h2><p id="pause-note">Click resume to capture your mouse.</p><button id="resume" class="button primary">RESUME <b>↗</b></button><button id="pause-settings" class="button secondary">AIM & SETTINGS</button><button id="freeplay-reset" class="button secondary" hidden>RESET POSITION & AMMO <b>↻</b></button><button id="leave" class="text-button">LEAVE MATCH</button><div class="controls"><span><b>WASD</b> Move</span><span><b>SHIFT</b> Sprint</span><span><b>C / CTRL</b> Slide</span><span><b>SPACE ×2</b> Double jump</span><span><b>RMB</b> Aim</span><span><b>RMB / F</b> Katana parry / scythe dash</span><span><b>R</b> Reload</span><span><b>1–5 / WHEEL</b> Weapons</span><span><b>ESC</b> Menu</span></div></section></div>
+  <div id="lobby" class="overlay" hidden><section class="dialog lobby-dialog"><button class="close" id="lobby-close" aria-label="Close multiplayer">×</button><div class="eyebrow">BETTER WITH A RIVAL</div><h2>PRIVATE DUEL.</h2><p>Send your friend this server’s address and your room code. Both players ready up to start.</p><label>YOUR CALLSIGN<input id="player-name" maxlength="18" autocomplete="nickname" placeholder="Runner"></label><div class="lobby-actions"><button id="create-room" class="button primary">CREATE ROOM <b>＋</b></button><div class="join-row"><input id="room-code" maxlength="6" placeholder="6-CHAR CODE" aria-label="Room code" autocomplete="off"><button id="join-room" class="button secondary">JOIN <b>↗</b></button></div></div><div id="room-detail" hidden><div class="room-code-display"><span>ROOM CODE</span><strong id="share-code">—</strong><button id="copy-room" class="text-button">COPY INVITE ↗</button></div><div id="lobby-players"></div><button id="ready" class="button primary">I’M READY <b>✓</b></button></div><p id="lobby-status" class="status-message" role="status">Your match runs on this server.</p><label class="toggle"><input type="checkbox" id="http-only"><span>Use HTTPS compatibility mode</span></label><small class="muted">For networks that allow this site but block WebSockets. Both modes can play together.</small></section></div>
+  <div id="results" class="overlay" hidden><section class="dialog results-dialog"><div class="eyebrow" id="result-kicker">MATCH COMPLETE</div><h2 id="result-title">WELL PLAYED.</h2><div class="result-score" id="result-score">5 <span>:</span> 2</div><div id="result-coins" class="result-coins">◈ +0 COINS EARNED</div><p id="result-note">One more round of rounds?</p><button id="rematch" class="button primary">RUN IT BACK <b>↻</b></button><button id="results-shop" class="button secondary">VISIT THE ARMORY <b>◈</b></button><button id="results-leave" class="text-button">BACK TO THE ARENA</button></section></div>
+  <dialog id="settings" class="settings dialog"><button class="close" id="settings-close" aria-label="Close settings">×</button><div class="eyebrow">DIAL IT IN</div><h2>YOUR KIND OF QUICK.</h2><p>Settings save automatically on this device.</p><button id="ch-open" class="button secondary"><span>CROSSHAIR STUDIO<small>DESIGN YOUR OWN OR IMPORT AN IMAGE</small></span><b>⊕</b></button><label>LOOK SENSITIVITY <output id="sensitivity-value"></output><input id="sensitivity" type="range" min="0.2" max="2" step="0.05"></label><label>AIM SENSITIVITY <output id="ads-value"></output><input id="ads-sensitivity" type="range" min="0.2" max="1" step="0.05"></label><label>FIELD OF VIEW <output id="fov-value"></output><input id="fov" type="range" min="70" max="110" step="1"></label><label>VOLUME <output id="volume-value"></output><input id="volume" type="range" min="0" max="1" step="0.05"></label><label>RENDER QUALITY<select id="quality"><option value="0">Performance</option><option value="1">Balanced</option><option value="2">High</option></select></label><label>BOT DIFFICULTY<select id="difficulty"><option value="easy">Warm-up</option><option value="normal">Challenger</option><option value="hard">Relentless</option></select></label><label class="toggle"><input id="raw-input" type="checkbox"><span>Raw mouse input (when supported)</span></label><label class="toggle"><input id="reduced-motion" type="checkbox"><span>Reduce weapon motion</span></label><button id="settings-done" class="button primary">LOOKS GOOD <b>✓</b></button></dialog>
+  <dialog id="crosshair-settings" class="dialog crosshair-dialog" aria-labelledby="ch-title">
+    <button class="close" id="ch-close" aria-label="Close crosshair studio">×</button>
+    <div class="eyebrow">CROSSHAIR STUDIO / PERSONALIZE YOUR AIM</div><h2 id="ch-title">MAKE YOUR MARK.</h2><p>Your crosshair, your call. Every change saves automatically.</p>
+    <div class="ch-layout">
+      <section class="ch-editor" aria-label="Crosshair controls">
+        <h3>01 <span>CHOOSE A SHAPE</span></h3>
+        <div class="ch-presets" role="group" aria-label="Crosshair shape">
+          <button data-ch-preset="cross" aria-pressed="true"><b aria-hidden="true">＋</b>Cross</button><button data-ch-preset="dot" aria-pressed="false"><b aria-hidden="true">•</b>Dot</button><button data-ch-preset="circle" aria-pressed="false"><b aria-hidden="true">⊙</b>Circle</button><button data-ch-preset="t" aria-pressed="false"><b aria-hidden="true">┬</b>T-shape</button>
+        </div>
+        <button id="ch-uploaded" class="ch-image-mode" aria-pressed="false" disabled>USE UPLOADED IMAGE <span>↗</span></button>
+        <div id="ch-built-options">
+          <div class="ch-color-row"><label>COLOR<input data-ch="color" type="color" aria-label="Crosshair color"></label><label>HEX COLOR<input id="ch-color-hex" type="text" maxlength="7" spellcheck="false" placeholder="#e8fffa"></label></div>
+          <div class="ch-sliders">
+            <label>LINE LENGTH <output data-ch-out="size"></output><input data-ch="size" type="range" min="2" max="28" step="1"></label>
+            <label>THICKNESS <output data-ch-out="thickness"></output><input data-ch="thickness" type="range" min="1" max="8" step="1"></label>
+            <label>CENTER GAP <output data-ch-out="gap"></output><input data-ch="gap" type="range" min="0" max="24" step="1"></label>
+            <label>OUTLINE <output data-ch-out="outline"></output><input data-ch="outline" type="range" min="0" max="3" step="0.5"></label>
+            <label>DOT SIZE <output data-ch-out="dotSize"></output><input data-ch="dotSize" type="range" min="1" max="10" step="1"></label>
+          </div>
+          <label class="toggle"><input data-ch="dot" type="checkbox"><span>Center dot</span></label><label class="toggle"><input data-ch="dynamic" type="checkbox"><span>Expand with movement and firing</span></label>
+        </div>
+        <div id="ch-image-options" hidden><h3>02 <span>SIZE & ALIGNMENT</span></h3><p class="ch-hint">Use the center guides to line up your image’s aim point.</p><div class="ch-sliders">
+          <label>IMAGE SIZE <output data-ch-out="imageSize"></output><input data-ch="imageSize" type="range" min="8" max="160" step="1"></label>
+          <label>ROTATION <output data-ch-out="imageRotation"></output><input data-ch="imageRotation" type="range" min="-180" max="180" step="1"></label>
+          <label>HORIZONTAL OFFSET <output data-ch-out="imageX"></output><input data-ch="imageX" type="range" min="-32" max="32" step="1"></label>
+          <label>VERTICAL OFFSET <output data-ch-out="imageY"></output><input data-ch="imageY" type="range" min="-32" max="32" step="1"></label>
+        </div><div class="ch-cleanup"><h3>03 <span>BACKGROUND CLEANUP</span></h3><label>IMAGE BACKGROUND<select data-ch="imageBackground"><option value="auto">Auto · detect checkerboard</option><option value="original">Keep original image</option><option value="checker">Remove checkerboard</option><option value="dark">Remove dark background</option><option value="light">Remove light background</option></select></label><label>CLEANUP AMOUNT <output data-ch-out="imageThreshold"></output><input data-ch="imageThreshold" type="range" min="0" max="48" step="1"></label><p id="ch-transparency-status" class="ch-hint" role="status"></p><p class="ch-hint">Gray squares can be part of the picture. Auto removes regular checkerboards and keeps real transparency. The original image stays saved so you can undo cleanup.</p></div></div>
+        <div class="ch-common"><label>OPACITY <output data-ch-out="opacity"></output><input data-ch="opacity" type="range" min="0.1" max="1" step="0.05"></label><label class="toggle"><input data-ch="hideADS" type="checkbox"><span>Hide crosshair while aiming</span></label><p class="ch-hint">The sniper uses its own scope. Your crosshair is personal and works in every mode.</p></div>
+      </section>
+      <section class="ch-preview-panel" aria-label="Crosshair preview and import">
+        <div class="ch-preview-heading"><h3>LIVE PREVIEW</h3><span>ACTUAL SIZE</span></div>
+        <div id="ch-preview-stage" class="ch-preview-stage" data-scene="foundry"><div class="ch-guide" aria-hidden="true"></div><canvas id="ch-preview" width="256" height="256" aria-label="Live crosshair preview"></canvas><span class="ch-preview-caption">CENTER OF AIM</span></div>
+        <div class="ch-scenes" role="group" aria-label="Preview background"><button data-ch-scene="foundry" aria-pressed="true">FOUNDRY</button><button data-ch-scene="sunbreak" aria-pressed="false">SUNBREAK</button><button data-ch-scene="afterlight" aria-pressed="false">AFTERLIGHT</button></div>
+        <div id="ch-drop" class="ch-drop"><span class="ch-upload-icon" aria-hidden="true">↥</span><strong>DROP YOUR CROSSHAIR HERE</strong><p>PNG, SVG, WebP or JPG · up to 2 MB<br>Maximum 2048 × 2048 px. Transparent images look best.</p><button id="ch-browse" class="button secondary">CHOOSE IMAGE <b>＋</b></button><input id="ch-file" type="file" accept=".png,.svg,.webp,.jpg,.jpeg,image/png,image/svg+xml,image/webp,image/jpeg" hidden></div>
+        <div class="ch-file-row"><span id="ch-file-name">No image selected</span><button id="ch-remove" class="text-button" disabled>REMOVE</button></div><p id="ch-message" class="ch-message" role="status" aria-live="polite">Saved on this browser.</p>
+      </section>
     </div>
-  </div>
-</div>
-
-<div id="infoPanel" class="title card"><button id="closeInfo" class="panelClose" aria-label="Hide info">×</button><h1>OPEN WORLD PHYSICS LAB</h1><p>WASD move · Mouse look · Shift sprint · Ctrl/C slide · Space jump / slide-jump · Left click use · 1–6 select · Q/E or wheel cycle · B SMG SEMI/AUTO · V 1st/3rd person · RMB aim in both views · T inspect · H hitboxes · F interact · R clear · Esc unlock</p></div>
-<div id="dataPanel" class="data card"><button id="closeData" class="panelClose" aria-label="Hide live data">×</button>
-  <h2>LIVE DATA</h2>
-  <div class="metric"><span>Speed</span><strong id="mSpeed">0.0</strong></div>
-  <div class="metric"><span>Movement</span><strong id="mMovement">IDLE</strong></div>
-  <div class="metric"><span>Enemies alive</span><strong id="mHumans">0</strong></div>
-  <div class="metric"><span>Respawning</span><strong id="mRespawning">0</strong></div>
-  <div class="metric"><span>Mode</span><strong id="mMode">MENU</strong></div>
-  <div class="metric"><span>Health</span><strong id="mHealth">100 / 100</strong></div>
-  <div class="metric"><span>Ragdolls</span><strong id="mRagdolls">0</strong></div>
-  <div class="metric"><span>Projectiles</span><strong id="mOrbs">0</strong></div>
-  <div class="metric"><span>Selected weapon</span><strong id="mTool">Grenade</strong></div>
-  <div class="metric"><span>SMG fire mode</span><strong id="mFireMode">SEMI</strong></div>
-  <div class="metric"><span>SMG cycle</span><strong id="mSmgCycle">0 / 12</strong></div>
-  <div class="metric"><span>Camera</span><strong id="mView">FIRST</strong></div>
-  <div class="metric"><span>Aim</span><strong id="mAim">HIP</strong></div>
-  <div class="metric"><span>Range</span><strong id="mRange">—</strong></div>
-  <div class="metric"><span>Debris</span><strong id="mDebris">0</strong></div>
-  <div class="metric"><span>FPS</span><strong id="mFps">0</strong></div>
-  <div class="metric"><span>Movement animation</span><strong id="mAnim">idle</strong></div>
-  <div class="metric"><span>Weapon animation</span><strong id="mWeaponAnim">idle</strong></div>
-  <div class="note">The weapon models and effects are fictional game mechanics. Their speeds, ranges and force values are arbitrary and are not real-world weapon specifications.</div>
-</div>
-<button id="showHud" class="hudRestore">SHOW HUD</button>
-<div class="healthHud card"><div class="healthTop"><span>PLAYER HEALTH</span><strong id="hpText">100</strong></div><div class="healthTrack"><div id="hpFill" class="healthFill"></div></div></div>
-<div id="roomHud" class="roomHud card"><span>ROOM <strong id="roomName">—</strong></span><span>PLAYERS <strong id="roomPlayers">1</strong></span><button id="leaveRoom" class="roomLeave">LEAVE</button></div>
-<div id="status" class="status card">Choose a mode to begin.</div>
-<div class="toolbelt card" id="toolbelt">
-  <div class="toolslot active" data-tool="pulse"><b>1 · GRENADE</b>Bounce + fuse</div>
-  <div class="toolslot" data-tool="rocket"><b>2 · RPG</b>Trail + impact</div>
-  <div class="toolslot" data-tool="smg"><b>3 · SUBMACHINE GUN</b>Compact automatic</div>
-  <div class="toolslot" data-tool="scatter"><b>4 · SHOTGUN</b>Close spread</div>
-  <div class="toolslot" data-tool="ak47"><b>5 · AK-47</b>Rifle</div>
-  <div class="toolslot" data-tool="sniper"><b>6 · SNIPER</b>Long-range precision</div>
-</div>
-<div id="lockHint" class="lockHint card">CLICK TO START</div>
-<div id="crosshair" class="cross"><div class="dot"></div></div>
-<div id="aimVignette" class="aimVignette"></div>
-<div id="scope" class="scope"><div class="ring"></div><div class="h"></div><div class="v"></div><div class="tick"></div></div>
-<div id="flash" class="flash"></div>
-<script src="multiplayer-config.js"></script>
-<script src="game.js"></script>
+    <div class="ch-footer"><button id="ch-reset" class="text-button">RESET TO DEFAULT</button><button id="ch-done" class="button primary">READY TO PLAY <b>✓</b></button></div>
+  </dialog>
+  <dialog id="account-dialog" class="dialog account-dialog" aria-labelledby="account-title" aria-describedby="account-description">
+    <button id="account-close" class="close" aria-label="Close account">×</button>
+    <div class="eyebrow">YOUR PLACE IN THE ARENA</div><h2 id="account-title">WELCOME BACK.</h2><p id="account-description">Sign in to load your coins, weapons, and saved loadout.</p>
+    <div id="account-tabs" class="account-tabs" role="group" aria-label="Account action"><button data-account-mode="login" aria-pressed="true">SIGN IN</button><button data-account-mode="register" aria-pressed="false">CREATE ACCOUNT</button></div>
+    <form id="account-form">
+      <div id="account-identifier-row"><label for="account-identifier">EMAIL OR USERNAME</label><input id="account-identifier" name="identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required></div>
+      <div id="account-username-row" hidden><label for="account-username">PUBLIC USERNAME</label><input id="account-username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="20" pattern="[A-Za-z0-9_]{3,20}" aria-describedby="account-username-hint"><small id="account-username-hint">3–20 letters, numbers, or underscores. Your email stays private.</small></div>
+      <div id="account-email-row" hidden><label for="account-email">EMAIL</label><input id="account-email" name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254"></div>
+      <label for="account-password">PASSWORD</label><input id="account-password" name="password" type="password" autocomplete="current-password" maxlength="128" required aria-describedby="account-password-hint"><small id="account-password-hint">For new accounts: at least 15 characters. Try a memorable phrase.</small>
+      <div id="account-confirm-row" hidden><label for="account-confirm">CONFIRM PASSWORD</label><input id="account-confirm" name="confirm-password" type="password" autocomplete="new-password" maxlength="128"></div>
+      <label class="account-show"><input id="account-show-password" type="checkbox"> Show password</label>
+      <p id="account-progress-note" class="account-note"></p><button id="account-submit" class="button primary" type="submit">SIGN IN ↗</button>
+    </form>
+    <section id="account-signed-in" hidden><div class="account-badge" aria-hidden="true">V / A</div><strong id="account-username-display"></strong><p id="account-email-display" class="account-email-display"></p><p id="account-summary"></p><p class="account-note">Sign in on the same game website to use this account on another device. Crosshairs and control settings stay on each browser.</p><form id="account-add-email" hidden><h3>ADD EMAIL SIGN-IN</h3><p class="account-note">Keep this account and all its progress. Add an email to use when signing in.</p><label for="account-link-email">EMAIL</label><input id="account-link-email" name="email" type="email" autocomplete="email" maxlength="254" required><label for="account-link-password">CURRENT GAME PASSWORD</label><input id="account-link-password" name="password" type="password" autocomplete="current-password" maxlength="128" required><button id="account-link-submit" class="button primary" type="submit">SAVE EMAIL</button></form><button id="account-logout" class="button secondary">SIGN OUT</button></section>
+    <p id="account-message" class="account-message" role="status" aria-live="polite"></p><button id="account-guest" class="text-button">BACK TO THE ARENA</button>
+  </dialog>
+  <button id="capture-fallback" class="capture-fallback" hidden>PLAY WITHOUT MOUSE CAPTURE · ARROWS / RIGHT-DRAG TO LOOK</button>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="fatal" class="fatal" hidden><h1>The arena couldn’t start.</h1><p id="fatal-message"></p><p>Launch with START_GAME.bat, then open http://localhost:3000.</p></div>
+  <script type="module" src="src/game.js"></script>
 </body>
 </html>
+

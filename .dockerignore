@@ -1,0 +1,12 @@
+node_modules
+.npm-cache
+data
+test-output
+*.log
+.git
+.env
+.env.*
+.neon
+starter
+tests
+dist
