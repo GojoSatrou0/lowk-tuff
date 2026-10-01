@@ -69,3 +69,15 @@ test('network grapple anchors are server chosen and stale or released input drop
   assert.deepEqual(hooked.players.find(p=>p.id===a.you).grapple.anchor,p.grapple.anchor);
   await delay(300);const released=(await post({action:'poll',token:b.token})).players.find(p=>p.id===a.you);assert.equal(released.grapple,null);assert(released.grappleCD>0);
 });
+test('an HTTP grapple reaches the overhead beam and a WebSocket opponent sees the same anchor',async t=>{
+  const app=createArenaServer({port:0,host:'127.0.0.1'}),address=await app.listen();t.after(()=>app.close());const base=`http://127.0.0.1:${address.port}`;
+  const post=async data=>{const r=await fetch(base+'/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});assert.equal(r.status,200);return r.json();};
+  const a=await post({action:'create',map:'foundry'}),b=await post({action:'join',room:a.room});
+  const ws=new WebSocket(base.replace('http:','ws:')+'/socket');t.after(()=>ws.terminate());let seen;
+  ws.on('message',raw=>{const s=JSON.parse(raw),p=s.players?.find(p=>p.id===b.you);if(p?.grapple)seen=p;});
+  await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});ws.send(JSON.stringify({token:a.token}));
+  await post({action:'ready',token:a.token});await post({action:'ready',token:b.token});await delay(3100);
+  await post({action:'input',token:b.token,input:{seq:1,grapple:true,grappleId:1,yaw:Math.PI,pitch:Math.atan2(12-1.58,13)}});await delay(120);
+  const view=await post({action:'poll',token:a.token}),p=view.players.find(p=>p.id===b.you);
+  assert(p.grapple);assert(p.grapple.anchor[1]>=11.725&&p.grapple.anchor[1]<=12.275);assert(Math.abs(p.grapple.anchor[2]+10)<=.35+1e-8);assert(p.v[1]>0);assert(seen);assert.deepEqual(seen.grapple.anchor,p.grapple.anchor);
+});

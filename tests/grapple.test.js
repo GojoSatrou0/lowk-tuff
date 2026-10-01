@@ -1,8 +1,35 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {GRAPPLE,MOVEMENT,WEAPONS,TICK,createPlayer,createFreePlay,cleanInput,movePlayer,stepMatch,resetPlayer,MAPS,horizontalSpeed,damagePlayer} from '../src/shared.js';
+import {GRAPPLE,MOVEMENT,WEAPONS,TICK,createPlayer,createFreePlay,cleanInput,movePlayer,stepMatch,resetPlayer,MAPS,horizontalSpeed,damagePlayer,eyeHeight,rayWorld,forward} from '../src/shared.js';
 const wall={extent:50,boxes:[{x:0,y:0,z:-12,w:8,h:12,d:1}],ramps:[]};
 const hold=(extra={})=>cleanInput({grapple:true,grappleId:1,...extra});
+test('overhead beams accept grapples across their span and pull players upward on both industrial maps',()=>{
+  for(const map of MAPS.filter(m=>m.id!=='canyon'))for(const x of [-22,0,22]){
+    const p=createPlayer('p','P');p.p=[x,0,-6];
+    const pitch=Math.atan2(12-eyeHeight(p),4),input=hold({pitch});
+    movePlayer(p,input,map,TICK);
+    assert(p.grapple,`${map.id} beam at x=${x}`);
+    assert(Math.abs(p.grapple.anchor[0]-x)<1e-8);
+    assert(p.grapple.anchor[1]>=11.725-1e-8&&p.grapple.anchor[1]<=12.275+1e-8);
+    assert(Math.abs(p.grapple.anchor[2]+10)<=.35+1e-8);
+    for(let i=0;i<20;i++)movePlayer(p,input,map,TICK);
+    assert(p.p[1]>2,'rope should gain height');
+    movePlayer(p,cleanInput({grappleId:1}),map,TICK);assert.equal(p.grapple,null);assert(p.grappleCD>2);
+  }
+});
+test('beam collision stops an upward pull, supports landing, and leaves adjacent sky open',()=>{
+  for(const map of MAPS.filter(m=>m.id!=='canyon')){
+    const p=createPlayer('p','P');p.p=[3,7,-9.65];p.ground=false;p.v=[0,24,0];
+    const input=hold({pitch:Math.atan2(12-(p.p[1]+eyeHeight(p)),.35)});
+    for(let i=0;i<75;i++){movePlayer(p,input,map,TICK);if(Math.abs(p.p[2]+10)<.35)assert(p.p[1]+(p.crouch?1.15:1.8)<=11.725+1e-8,'head must not pass through the beam');}
+    const landed=createPlayer('landed','L');landed.p=[3,13,-10];landed.ground=false;
+    for(let i=0;i<60;i++)movePlayer(landed,cleanInput(),map,TICK);
+    assert(landed.ground);assert(Math.abs(landed.p[1]-12.275)<1e-8);
+    const origin=[3,9,-20];assert.equal(rayWorld(origin,forward(Math.PI,Math.atan2(5,10)),map,30),30,'sky above beam stays open');
+    const distant=createPlayer('far','F');distant.p=[3,0,23];movePlayer(distant,hold({pitch:Math.atan2(12-eyeHeight(distant),33)}),map,TICK);assert.equal(distant.grapple,null);
+  }
+  assert(!MAPS.find(m=>m.id==='canyon').boxes.some(b=>b.kind==='gantry'));
+});
 test('grapple attaches to real geometry, pulls, preserves released momentum and leaves every weapon untouched',()=>{
   for(let weapon=0;weapon<WEAPONS.length;weapon++){
     const p=createPlayer('p','P');p.weapon=weapon;const ammo=[...p.ammo];
