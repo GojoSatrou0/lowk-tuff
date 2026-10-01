@@ -5,6 +5,7 @@ import {promisify} from 'node:util';
 import {domainToASCII} from 'node:url';
 import isEmail from 'validator/lib/isEmail.js';
 import {freshProfile,buyWeapon,equipLoadout,migrateLoadout,STARTING_COINS} from './src/economy.js';
+import {WEAPONS} from './src/shared.js';
 
 const hash=token=>createHash('sha256').update(token).digest('hex');
 const validToken=token=>typeof token==='string'&&/^[a-f0-9]{64}$/.test(token);
@@ -58,6 +59,15 @@ export class ProfileStore {
   guestId(token){if(!validToken(token))return null;const id=hash(token);return Object.hasOwn(this.profiles,id)&&!Object.hasOwn(this.claimed,id)?id:null;}
   get(token){return this.getById(this.guestId(token));}
   getById(id){return id&&Object.hasOwn(this.profiles,id)?this.profiles[id]:null;}
+  isAdmin(profileId){const key=this.claimed[profileId];return !!key&&this.accounts[key]?.profileId===profileId&&this.accounts[key]?.admin===true;}
+  // Server-console operation only. No HTTP action can call this or set roles.
+  grantAdmin(identifier){
+    const key=this.accountKey(identifier),account=key&&this.accounts[key];if(!account)throw fail('Existing account not found. Nothing was granted.',404);
+    const p=this.getById(account.profileId);if(!p)throw fail('Account profile unavailable.',404);
+    const changed=account.admin!==true||WEAPONS.some((_,id)=>!p.owned.includes(id));
+    account.admin=true;p.owned=[...new Set([...p.owned,...WEAPONS.map((_,id)=>id)])];
+    if(changed){p.revision++;this.save();}return {username:account.username,admin:true,weapons:p.owned.length};
+  }
   create(){const token=randomBytes(32).toString('hex'),profile=freshProfile();this.profiles[hash(token)]=profile;this.save();return {profileToken:token,profile:structuredClone(profile),user:null};}
   purchase(token,id){return this.purchaseById(this.guestId(token),id);}
   purchaseById(profileId,id){const p=this.getById(profileId);if(!p)throw fail('Profile unavailable. Refresh to reconnect.',410);buyWeapon(p,id);this.save();return structuredClone(p);}
@@ -126,7 +136,7 @@ export class ProfileStore {
   authenticate(token){
     if(!validToken(token))return null;
     const sessionId=hash(token),s=this.authSessions[sessionId];if(!s||s.expiresAt<=Date.now())return null;
-    const a=this.accounts[s.account];return a?{sessionId,profileId:a.profileId,user:{username:a.username,email:a.email||null,emailVerified:false}}:null;
+    const a=this.accounts[s.account];return a?{sessionId,profileId:a.profileId,user:{username:a.username,email:a.email||null,emailVerified:false,admin:a.admin===true}}:null;
   }
   sessionActive(id){return !!id&&!!this.authSessions[id]&&this.authSessions[id].expiresAt>Date.now();}
   logout(token){if(validToken(token)&&this.authSessions[hash(token)]){delete this.authSessions[hash(token)];this.save();}}

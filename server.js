@@ -8,6 +8,7 @@ import { TICK, MAPS, createMatch, createPlayer, cleanInput, resetPlayer, mapById
 import { ProfileStore,normalizeEmail } from './profile-store.js';
 import { rewardFor } from './src/economy.js';
 import { createBot,botInput } from './src/bot.js';
+import {applyAdminToy} from './src/admin-rules.js';
 
 const ROOT=fileURLToPath(new URL('.',import.meta.url));
 export function createArenaServer({port=Number(process.env.PORT)||3000,host=process.env.HOST||'0.0.0.0',dataDir=null,profileStore=null,secureCookies=process.env.NODE_ENV==='production',publicOrigin=process.env.PUBLIC_ORIGIN||''}={}){
@@ -24,17 +25,26 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
   function auth(req,res){const token=cookieToken(req),identity=profiles.authenticate(token);if(token&&!identity){setCookie(res,null);throw fail('Your sign-in expired. Sign in again to load your saved progress.',401);}return identity;}
   function requireLobby(profileId){if(profileId&&[...sessions.values()].some(s=>s.profileId===profileId))throw fail('Leave your room before changing your account or armory.',409);}
   function checkIdentity(data,identity){if(Object.hasOwn(data,'expectedUser')&&data.expectedUser!==(identity?.user.username||null))throw fail('Your account changed in another tab. Refresh to load it.',409);}
-  function view(s){return {...snapshot(s.room.match),you:s.id,room:s.room.code,practice:!!s.room.practice,paused:!!s.room.paused,profile:profiles.getById(s.profileId)};}
+  function canAdmin(s){return !!s.authSession&&profiles.sessionActive(s.authSession)&&profiles.isAdmin(s.profileId)&&s.room.hostProfileId===s.profileId;}
+  function view(s){return {...snapshot(s.room.match),you:s.id,room:s.room.code,practice:!!s.room.practice,paused:!!s.room.paused,canAdmin:canAdmin(s),profile:profiles.getById(s.profileId)};}
   function session(data){const s=sessions.get(data.token);if(s?.authSession&&!profiles.sessionActive(s.authSession)){leave(s);throw fail('Your sign-in expired. Sign in again.',401);}if(!s)throw fail('Session expired. Create or join a room again.',410);s.seen=Date.now();return s;}
   function leave(s){
     if(!sessions.has(s.token))return;sessions.delete(s.token);s.socket?.close(1000,'Left room');
     const r=s.room;r.match.players=r.match.players.filter(p=>p.id!==s.id);delete r.inputs[s.id];
     if(!r.match.players.length||r.practice){rooms.delete(r.code);return;}
     r.match.phase='waiting';r.match.clock=0;r.match.winner=null;r.match.round=1;
+    if(r.hostProfileId===s.profileId&&r.match.playground)Object.assign(r.match.playground,{lowGravity:false,turbo:false,bigHeads:false});
     for(const p of r.match.players){p.score=0;p.ready=false;}emit(r.match,'disconnect',{player:s.id});
   }
   function action(data,ip,identity=null){
     if(!data||typeof data!=='object'||Array.isArray(data))throw Object.assign(new Error('Invalid request'),{status:400});
+    if(data.action==='admin'){
+      if(!identity||!profiles.isAdmin(identity.profileId))throw fail('Admin sign-in required.',403);
+      const s=session(data);
+      if(!canAdmin(s)||s.profileId!==identity.profileId||s.authSession!==identity.sessionId)throw fail('Admin toys are available only in rooms you host with this sign-in.',403);
+      if(!rate(identity.profileId,'admin-toy',1,750))throw fail('Give that toy a moment before using another.',429);
+      applyAdminToy(s.room.match,s.id,data.command,data.target);return view(s);
+    }
     if(['profile','purchase','loadout'].includes(data.action)){
       if(data.action!=='profile')checkIdentity(data,identity);
       if(data.action==='profile'&&!identity&&!data.profileToken){if(!rate(ip,'profile',20,60000))throw fail('Please wait before creating another profile.',429);return profiles.create();}
@@ -61,6 +71,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
       if(profileId&&[...sessions.values()].some(s=>s.profileId===profileId))throw fail('This profile already has an open room. Leave it in your other tab first.',409);
       if(!profileId){profileToken=profiles.create().profileToken;profileId=profiles.guestId(profileToken);}
       rooms.set(r.code,r);
+      if(data.action!=='join')r.hostProfileId=profileId;
       const token=randomBytes(32).toString('hex'),id=randomBytes(8).toString('hex');
       const slot=r.match.players.some(p=>p.slot===0)?1:0;
       const p=createPlayer(id,String(data.name||identity?.user.username||'Runner').replace(/[<>\x00-\x1f]/g,'').slice(0,18),slot);p.loadout=[...profiles.getById(profileId).loadout];p.weapon=p.loadout[0];resetPlayer(p,mapById(r.match.map));r.match.players.push(p);r.members[id]=profileId;
@@ -107,7 +118,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const url=new URL(req.url,'http://localhost'),ip=req.socket.remoteAddress;
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
     try{
-      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:8,loadoutSlots:4,throwables:true,release:'1.11.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
+      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:9,loadoutSlots:4,throwables:true,adminToys:true,release:'1.12.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
       if(url.pathname==='/api'||url.pathname==='/api/auth'){
         if(req.method!=='POST'){response(res,405,{error:'Use POST'});return;}
         if(!safeOrigin(req)){response(res,403,{error:'Origin not allowed'});return;}
@@ -160,7 +171,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
         stepMatch(r.match,inputs,TICK);
         const rewardEvents=r.match.events.filter(e=>e.id>r.rewardCursor);r.rewardCursor=r.match.eventSeq;
         for(const event of rewardEvents)for(const [id,profileId]of Object.entries(r.members)){
-          if(!r.match.players.some(p=>p.id===id))continue;const amount=rewardFor(event,id);if(!amount)continue;
+          if(r.match.playground?.used||!r.match.players.some(p=>p.id===id))continue;const amount=rewardFor(event,id);if(!amount)continue;
           const profile=profiles.rewardById(profileId,amount);if(profile)emit(r.match,'coins',{player:id,amount,balance:profile.coins,reason:event.type==='matchEnd'?'MATCH COMPLETE':'ROUND COMPLETE'});
         }
       }acc-=TICK;ticks++;
