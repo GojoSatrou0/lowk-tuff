@@ -1,5 +1,7 @@
 # Free Netlify, Render and Neon hosting
 
+**Current deployment choice:** use [Northflank Sandbox](NORTHFLANK.md) for a host without a card. Render required card verification on this account, so no Render service was created. The Netlify build steps below work with either backend host. The Render section remains an optional configuration reference.
+
 The frontend is https://velocity-arena.netlify.app/. Netlify serves game files and proxies `/api` to one Render Free Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across Render restarts. No paid disk is required.
 
 ## Backend
