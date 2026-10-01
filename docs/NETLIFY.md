@@ -1,10 +1,10 @@
-# Free Netlify, Render and Neon hosting
+# Connect Netlify to the game server
 
 **Current deployment choice:** use [Northflank Sandbox](NORTHFLANK.md) for a host without a card. Render required card verification on this account, so no Render service was created. The Netlify build steps below work with either backend host. The Render section remains an optional configuration reference.
 
-The frontend is https://velocity-arena.netlify.app/. Netlify serves game files and proxies `/api` to one Render Free Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across Render restarts. No paid disk is required.
+The frontend is https://velocity-arena.netlify.app/. After deployment, Netlify will serve game files and proxy `/api` to one Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across server restarts. No paid disk is required. The public backend and proxy connection are still pending.
 
-## Backend
+## Optional Render backend reference
 
 Use the `codex/velocity-arena` branch in https://github.com/GojoSatrou0/lowk-tuff. The original game remains on `main`. Exclude `.env*`, `data/`, logs, `.npm-cache/`, `node_modules/`, `test-output/`, `dist/` and the preserved starter archive from source uploads.
 
@@ -32,7 +32,7 @@ The server refuses to start if the required database is missing. It waits for da
 
 For Git-connected Netlify, use build command `npm run build:netlify`, publish directory `dist`, and environment variable `ARENA_SERVER_URL`. No database credentials belong on Netlify.
 
-Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/) and polling gameplay. Opening the Render game URL directly enables WebSockets. Cookies remain HttpOnly, Secure and SameSite=Strict on each game origin. Both addresses reach the same backend; use the Netlify link consistently for a shared browser session.
+Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/) and polling gameplay. Opening the backend game URL directly enables WebSockets. Cookies remain HttpOnly, Secure and SameSite=Strict on each game origin. Both addresses reach the same backend; use the Netlify link consistently for a shared browser session.
 
 ## Free-plan limits
 
@@ -40,6 +40,6 @@ Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirec
 
 Free quotas can suspend the game or database until reset. Keep all services on free plans and do not enable automatic paid upgrades or paid overages. This setup does not promise unlimited traffic or continuous availability. Neon Free has storage and compute quotas; inspect usage in its dashboard. Do not use Render's expiring free Postgres or a paid persistent disk for this configuration.
 
-An HTML `/api/status` response means proxy setup is missing or the backend is waking. Persistent 502/504 responses require checking Render's deploy logs. A 403 account response requires `PUBLIC_ORIGIN` to match the Netlify origin exactly.
+An HTML `/api/status` response means proxy setup is missing or the backend is waking. Persistent 502/504 responses require checking the backend host's deploy logs. A 403 account response requires `PUBLIC_ORIGIN` to match the Netlify origin exactly.
 
 Email is a login identifier. Email verification, password-reset emails, and OAuth are not implemented. Local PC accounts are separate from the newly hosted database. Browser crosshairs and controls remain local preferences.
