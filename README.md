@@ -24,6 +24,7 @@ npm start
 
 ## What is included
 
+- **Arsenal update (1.10):** Kestrel Crossbow (325 coins), Sentinel DMR (250), Whisper Pistol (125), and Impact Hammer (225). The crossbow fires a fast bolt without drawing and automatically recocks; the DMR and suppressed pistol fire once per click; the hammer knocks back surviving targets and participates in speed clashes. Each has an armory icon, first-person model and firing animation. Katana parries the three new ranged weapons; the hammer bypasses its guard.
 - **Overhead beam grappling (1.9.2):** the narrow overhead beam and its supports on Foundry and Afterlight are solid grapple targets in practice and multiplayer. Aim at the beam within 30 m and hold Q; release to let go. You can land on its top. The visible beam dimensions are also used for collision and server ray checks.
 - **Motion update (1.9.1):** sharper weapon recoil with smooth recovery, drawn weapon transitions, sprint and guard poses, timed reloads, moving magazines, and improved melee swings. The sniper now shows optical recoil, a bolt cycle, shell ejection, and a ready indicator while scoped; its central aiming reticle stays fixed. Reduce Weapon Motion removes the added movement and flash while keeping the ready indicator.
 - **Parry Practice:** a borrowed katana, timed incoming shots, a green parry cue, instant retries, accuracy counts and streaks. Press F or right mouse when the cue appears.
@@ -37,7 +38,7 @@ npm start
 - Material lighting, baked directional shadows, fog, detailed surfaces, distant scenery, muzzle flashes, tracers, hit markers, and generated sound effects.
 - Batched static geometry; Performance/Balanced/High quality settings.
 - Sprint, crouch, slide, momentum-carrying slide-jumps, coyote time, and one double jump.
-- **15 original weapons:** five free starters plus an unlockable burst rifle, revolver, dual pistols, bow, rocket launcher, katana, minigun, flamethrower, Shorty, and scythe.
+- **19 original weapons:** five free starters plus an unlockable burst rifle, revolver, dual pistols, bow, rocket launcher, katana, minigun, flamethrower, Shorty, scythe, crossbow, marksman rifle, silenced pistol, and hammer.
 - A coin wallet, round/match rewards, permanent weapon unlocks, and five customizable weapon slots. Coins are earned through play; there are no real-money purchases.
 - Email/password accounts with public usernames, registration, sign-in, sign-out, and saved progress across devices on the same game server. Existing username accounts continue to work and can add an email. Guests can still play without an account.
 - Traveling arrows with gravity and aim-to-charge, three-shot bursts, rockets with cover-aware splash/self-damage and blast-jumping, and katana sprinting.

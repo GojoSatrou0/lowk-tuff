@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#111c23"><meta name="description" content="Play Velocity Arena, a free online browser FPS. Race through 1v1 duels, chain slide-jumps, parry shots and win melee clashes with speed. First to five wins.">
   <title>Velocity Arena — Free Online FPS &amp; Multiplayer Duels</title>
   <link rel="canonical" href="https://velocity-arena.netlify.app/">
-  <meta name="application-version" content="1.9.2">
+  <meta name="application-version" content="1.10.0">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta property="og:type" content="website"><meta property="og:site_name" content="Velocity Arena">
   <meta property="og:title" content="Velocity Arena — Free Online FPS">
@@ -24,12 +24,12 @@
   <main id="menu" class="menu">
     <header class="topbar">
       <a class="brand" href="./" aria-label="Velocity Arena home"><img src="app-icon.svg" alt=""><span>VELOCITY<small>ARENA</small></span></a>
-      <nav aria-label="Main"><button class="nav-link active" data-view="play">PLAY</button><button class="nav-link" data-view="armory">ARMORY <span data-weapon-count>15</span></button><button class="nav-link" id="settings-open">SETTINGS</button></nav>
+      <nav aria-label="Main"><button class="nav-link active" data-view="play">PLAY</button><button class="nav-link" data-view="armory">ARMORY <span data-weapon-count>19</span></button><button class="nav-link" id="settings-open">SETTINGS</button></nav>
       <div class="profile"><span class="online-dot"></span><span id="server-label">CHECKING SERVER</span><button id="wallet-open" class="wallet-chip" aria-label="Open coin shop"><b>◈</b> <strong data-wallet>100</strong></button><button id="account-open" class="account-chip" aria-label="Sign in or create account">SIGN IN</button></div>
     </header>
     <div id="play-view" class="play-view">
       <section class="hero">
-        <div class="eyebrow"><span></span> VELOCITY ARENA / THE MOTION UPDATE</div>
+        <div class="eyebrow"><span></span> VELOCITY ARENA / THE ARSENAL UPDATE</div>
         <h1>STAY QUICK.<br><em>HIT FIRST.</em></h1>
         <p>Build speed. Win the clash.<br>A free browser FPS. Five rounds to prove it.</p>
         <div class="mode-pills"><span>1V1 DUELS</span><i></i><span>FIRST TO 5</span><i></i><span>NO DOWNLOAD</span></div>
@@ -43,7 +43,7 @@
       <details class="arena-guide"><summary>HOW TO PLAY VELOCITY ARENA <span>CONTROLS · CLASHES · MULTIPLAYER</span></summary><div><section><h2>A free online movement FPS</h2><p>Play private 1v1 duels on three arenas. Create a room, share its code, and both ready up. The first player to win five rounds wins the match. Sign in to save earned coins, unlocked weapons and your loadout, or play as a guest.</p></section><section><h2>Speed wins a melee clash</h2><p>Sprint with Shift, slide with C or Ctrl, then jump to carry your momentum. Air-strafe to change your route. When two nearby, facing players swing melee weapons within 0.12 seconds, their attacks clash. A lead of at least 1 m/s wins and stuns the slower player for 0.75 seconds. Close ties repel both players.</p></section><section><h2>Parry, practice, improve</h2><p>With the katana, press F or right mouse to guard against bullets, arrows and flames. Rockets and melee bypass the guard. Use Parry Practice for timed katana blocks, or Stun Practice to learn speed clashes. Press T in Stun Practice to swap between a stationary and charging trainer. These drills lend you a weapon and keep session scores. Hold Q while aiming at nearby cover or the overhead beam to grapple; release Q to keep your momentum. Grapple works with every weapon and recharges in 2.5 seconds after release. Free Play has no bots; face ECHO in solo. WASD moves, Space jumps and double-jumps, left mouse attacks, R reloads, and 1–5 selects weapons. Desktop keyboard and mouse recommended.</p></section></div></details>
       <footer><span><i class="online-dot"></i> BUILT FOR THE NEXT ROUND.</span><span>SLIDE <b>C</b> <i> / </i> DOUBLE JUMP <b>SPACE ×2</b> <i> / </i> AIM <b>RMB</b></span><span>VOL. 01 <i>—</i> ARENA EXPANSION</span></footer>
     </div>
-    <section id="armory-view" class="armory-view" hidden><div class="eyebrow">EARN YOUR NEXT FAVORITE.</div><div class="armory-title"><h1>THE ARMORY<span data-weapon-count>15</span></h1><div class="shop-wallet"><small id="wallet-state">CONNECTING WALLET</small><strong>◈ <span data-wallet>100</span></strong><span>COINS</span></div></div><p>Win rounds. Stack coins. Build your five-weapon kit.</p><div class="earn-strip"><b id="starting-coins">100 COINS TO START</b><span id="reward-rules"></span><small>Earn in solo & online matches. No real money.</small></div><div class="loadout-heading"><h2>YOUR LOADOUT</h2><span>SELECT A SLOT, THEN EQUIP A WEAPON BELOW.</span></div><div class="loadout-slots" id="loadout-slots"></div><div id="weapon-grid" class="weapon-grid"></div><button class="button primary" id="armory-back">BACK TO PLAY <b>↗</b></button></section>
+    <section id="armory-view" class="armory-view" hidden><div class="eyebrow">EARN YOUR NEXT FAVORITE.</div><div class="armory-title"><h1>THE ARMORY<span data-weapon-count>19</span></h1><div class="shop-wallet"><small id="wallet-state">CONNECTING WALLET</small><strong>◈ <span data-wallet>100</span></strong><span>COINS</span></div></div><p>Win rounds. Stack coins. Build your five-weapon kit.</p><div class="earn-strip"><b id="starting-coins">100 COINS TO START</b><span id="reward-rules"></span><small>Earn in solo & online matches. No real money.</small></div><div class="loadout-heading"><h2>YOUR LOADOUT</h2><span>SELECT A SLOT, THEN EQUIP A WEAPON BELOW.</span></div><div class="loadout-slots" id="loadout-slots"></div><div id="weapon-grid" class="weapon-grid"></div><button class="button primary" id="armory-back">BACK TO PLAY <b>↗</b></button></section>
   </main>
   <section id="hud" class="hud" hidden aria-label="Game status">
     <div class="hud-top-left"><span class="brand-mini">V / ARENA</span><strong id="hud-map">THE FOUNDRY</strong><small id="connection">SOLO PRACTICE</small><div class="hud-wallet">◈ <b data-wallet>100</b><span id="coin-gain"></span></div></div>
