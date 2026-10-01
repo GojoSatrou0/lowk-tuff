@@ -57,3 +57,15 @@ test('HTTP melee inputs produce one shared clash and stun snapshot over WebSocke
   assert.equal(received.events.find(e=>e.type==='clash').id,clash.id);assert.equal(received.players.find(p=>p.id===b.you).hp,100);
   for(const file of ['/robots.txt','/sitemap.xml']){const r=await fetch(base+file);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/text\/plain|application\/xml/);}
 });
+test('network grapple anchors are server chosen and stale or released input drops the rope',async t=>{
+  const app=createArenaServer({port:0,host:'127.0.0.1'}),address=await app.listen();t.after(()=>app.close());const base=`http://127.0.0.1:${address.port}`;
+  const post=async data=>{const r=await fetch(base+'/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});assert.equal(r.status,200);return r.json();};
+  const a=await post({action:'create'}),b=await post({action:'join',room:a.room});await post({action:'ready',token:a.token});await post({action:'ready',token:b.token});await delay(3100);
+  const ws=new WebSocket(base.replace('http:','ws:')+'/socket');t.after(()=>ws.terminate());let hooked;
+  ws.on('message',raw=>{const s=JSON.parse(raw);if(s.players?.find(p=>p.id===a.you)?.grapple)hooked=s;});
+  await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});ws.send(JSON.stringify({token:a.token}));
+  ws.send(JSON.stringify({action:'input',input:{seq:1,grapple:true,grappleId:1,yaw:0,anchor:[999,999,999]}}));await delay(120);
+  const view=await post({action:'poll',token:b.token}),p=view.players.find(p=>p.id===a.you);assert(p.grapple);assert(p.grapple.anchor.every(v=>Math.abs(v)<30));assert(p.v[2]<0);assert(hooked);
+  assert.deepEqual(hooked.players.find(p=>p.id===a.you).grapple.anchor,p.grapple.anchor);
+  await delay(300);const released=(await post({action:'poll',token:b.token})).players.find(p=>p.id===a.you);assert.equal(released.grapple,null);assert(released.grappleCD>0);
+});
