@@ -1,5 +1,15 @@
 # Verification
 
+## Version 1.8 momentum and search update
+
+- Syntax checks and all **86 tests passed** on October 1, 2026.
+- New rules cover all nine blade/katana/scythe pairings in both player orders, staggered swings inside the clash window, speed-based wins, ties, cover/range/facing, action suppression and recovery, lone melee windup damage, air momentum retention, speed limits and thin-wall collision.
+- A real HTTP/WebSocket integration check confirms both transports receive the same authoritative clash event and stun state. Client-supplied speed and stun values cannot control the outcome.
+- The solo opponent chooses a melee approach when a melee-equipped player is close, and returns to gunplay at distance.
+- The local browser rendered the updated lobby, readable Free Play speed meter, and gameplay guide. Application warning/error logs were empty. Automated tests validate transient clash/stun behavior; this browser check does not claim a manual live clash playthrough.
+- Netlify build checks include public-only output with robots.txt and sitemap.xml. Server checks confirm both crawler files have the correct HTTP content types.
+- Google Search Console verification/submission is **not performed**. Search-engine inclusion/ranking is not claimed. Follow [SEARCH.md](SEARCH.md).
+
 ## Automated checks
 
 Run `npm run check` and `npm test` in the project folder. Syntax checks and all **69 tests passed** in the version 1.6.1 local verification run. All 25 entries from the supplied archive were checked in the base release; every original file has the same SHA-256 hash in `starter/`. These updates do not modify that folder.
