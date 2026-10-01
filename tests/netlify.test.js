@@ -15,7 +15,9 @@ test('Netlify build publishes only frontend files and proxy rules with HTTP game
   const fetchImpl=async url=>{assert.equal(url,'https://backend.example/health');return Response.json({name:'Velocity Arena',emailAccounts:true});};
   const out=await buildNetlify('https://backend.example',{outputRoot:root,fetchImpl});
   assert.equal(out,path.join(root,'dist'));
-  const files=await readdir(out);for(const allowed of ['index.html','styles.css','src','assets','_redirects','_headers'])assert(files.includes(allowed));
+  const files=await readdir(out);for(const allowed of ['index.html','styles.css','src','assets','robots.txt','sitemap.xml','_redirects','_headers'])assert(files.includes(allowed));
+  assert.match(await readFile(path.join(out,'robots.txt'),'utf8'),/Sitemap: https:\/\/velocity-arena.netlify.app\/sitemap.xml/);
+  assert.match(await readFile(path.join(out,'sitemap.xml'),'utf8'),/<loc>https:\/\/velocity-arena.netlify.app\/<\/loc>/);
   for(const forbidden of ['server.js','profile-store.js','data','tests','package.json','.env','node_modules','starter'])assert(!files.includes(forbidden));
   assert.match(await readFile(path.join(out,'src/deployment.js'),'utf8'),/FORCE_HTTP=true/);
   await writeFile(path.join(out,'stale-file.txt'),'old build');await buildNetlify('https://backend.example',{outputRoot:root,fetchImpl});assert(!(await readdir(out)).includes('stale-file.txt'));

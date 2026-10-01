@@ -19,7 +19,7 @@ test('blade crosses the view, alternates its cut, settles, and keeps a smaller r
 function duel(aPos,bPos){const m=createMatch();m.phase='live';m.clock=90;m.players=[createPlayer('a','A'),createPlayer('b','B',1)];m.players[0].weapon=4;m.players[0].p=aPos;m.players[1].p=bPos;return m;}
 const attack=m=>stepMatch(m,{a:cleanInput({weapon:4,fire:true}),b:cleanInput()});
 test('blade deals close-range damage once per click and cannot shoot distant targets or spawn projectiles',()=>{
-  const near=duel([-12,0,12],[-12,0,9.5]);attack(near);assert.equal(near.players[1].hp,45);
+  const near=duel([-12,0,12],[-12,0,9.5]);attack(near);assert.equal(near.players[1].hp,100);for(let i=0;i<8;i++)attack(near);assert.equal(near.players[1].hp,45);
   for(let i=0;i<60;i++)attack(near);assert.equal(near.players[1].hp,45);assert.equal(near.players[0].ammo[4],-1);assert.equal(near.projectiles.length,0);
   const far=duel([-12,0,12],[-12,0,7]);attack(far);assert.equal(far.players[1].hp,100);assert.equal(far.projectiles.length,0);
   const target=createPlayer('b','B',1);target.p=[0,0,-2];const wall={boxes:[{x:0,z:-1,y:0,w:3,h:3,d:.2}],ramps:[]};

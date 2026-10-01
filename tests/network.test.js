@@ -42,3 +42,18 @@ test('WebSocket and HTTP compatibility client share authoritative state',async t
   ws.send(JSON.stringify({action:'ready'}));await post({action:'ready',token:b.token});await delay(120);assert.equal(latest.phase,'countdown');assert.equal(latest.you,a.you);
   ws.send(JSON.stringify({action:'input',input:{seq:1,hp:1000,damage:999}}));await delay(80);assert(latest.players.every(p=>p.hp===100));
 });
+test('HTTP melee inputs produce one shared clash and stun snapshot over WebSocket and polling',async t=>{
+  const app=createArenaServer({port:0,host:'127.0.0.1'}),address=await app.listen();t.after(()=>app.close());const base=`http://127.0.0.1:${address.port}`;
+  const post=async data=>{const r=await fetch(base+'/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});assert.equal(r.status,200);return r.json();};
+  const a=await post({action:'create'}),b=await post({action:'join',room:a.room});
+  const ws=new WebSocket(base.replace('http:','ws:')+'/socket');t.after(()=>ws.terminate());
+  let received;ws.on('message',raw=>{const s=JSON.parse(raw);if(s.events?.some(e=>e.type==='clash'))received=s;});
+  await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});ws.send(JSON.stringify({token:a.token}));
+  await Promise.all([post({action:'input',token:a.token,input:{seq:1,weapon:4,fireId:1,yaw:0,speed:999,stun:0}}),post({action:'input',token:b.token,input:{seq:1,weapon:4,fireId:1,yaw:Math.PI}})]);
+  const match=app.rooms.get(a.room).match;
+  for(const p of match.players){const first=p.id===a.you;p.weapon=4;p.cooldown=0;p.p=[-12,0,first?1.1:-1.1];p.v=[0,0,first?-18:8];p.dash=.15;}
+  match.phase='live';match.clock=90;await delay(100);
+  const polled=await post({action:'poll',token:b.token});const clash=polled.events.find(e=>e.type==='clash');assert.equal(clash.winner,a.you);assert(clash.speeds.every(v=>v<33));assert(polled.players.find(p=>p.id===b.you).stun>0);
+  assert.equal(received.events.find(e=>e.type==='clash').id,clash.id);assert.equal(received.players.find(p=>p.id===b.you).hp,100);
+  for(const file of ['/robots.txt','/sitemap.xml']){const r=await fetch(base+file);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/text\/plain|application\/xml/);}
+});

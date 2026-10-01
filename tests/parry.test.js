@@ -12,7 +12,7 @@ test('parry catches a traveling arrow and consumes it without applying damage',(
   for(let i=0;i<35;i++)run(m,{}, {altId:1});assert.equal(b.hp,100);assert.equal(m.projectiles.length,0);assert(m.events.some(e=>e.type==='parry'&&e.weapon===8));
 });
 test('blade, katana, and scythe all damage a parrying katana user',()=>{
-  for(const id of [4,10,14]){const {m,b}=duel(id);b.p=[-12,0,9.5];run(m,{fire:true},{altId:1});assert(b.parry>0);assert.equal(b.hp,100-WEAPONS[id].damage,WEAPONS[id].name);assert(!m.events.some(e=>e.type==='parry'));}
+  for(const id of [4,10,14]){const {m,b}=duel(id);b.p=[-12,0,9.5];run(m,{fire:true},{altId:1});for(let n=0;n<8;n++)run(m,{fire:true},{altId:1});assert(b.parry>0);assert.equal(b.hp,100-WEAPONS[id].damage,WEAPONS[id].name);assert(!m.events.some(e=>e.type==='parry'));}
 });
 test('rocket direct hits and splash both bypass parry',()=>{
   for(const direct of [true,false]){const {m,b}=duel(9);b.p=[0,0,0];b.parry=.7;m.projectiles=[{id:1,owner:'a',weapon:9,kind:'rocket',p:direct?[0,1,2]:[1,1,0],v:direct?[0,0,-24]:[0,-24,0],damage:85,life:4}];stepProjectiles(m,empty,.1);assert(b.hp<100);assert(!m.events.some(e=>e.type==='parry'));}

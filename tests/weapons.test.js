@@ -26,7 +26,7 @@ test('rocket direct hits and splash damage respect cover, consume the rocket, an
   a.p=[0,0,0];a.hp=100;m.projectiles=[{id:2,owner:'a',weapon:9,kind:'rocket',p:[0,1,0],v:[0,-24,0],damage:85,life:4}];stepProjectiles(m,empty,.1);assert(a.hp<100&&a.hp>60);assert(a.v[1]>0);assert(!a.ground);
 });
 test('katana has greater reach and sprint speed; round resets clear projectiles and ammo',()=>{
-  const m=duel(10),[a,b]=m.players;b.p=[-12,0,8.8];tick(m,{fire:true});assert.equal(b.hp,52);
+  const m=duel(10),[a,b]=m.players;b.p=[-12,0,8.8];tick(m,{fire:true});for(let n=0;n<8;n++)tick(m,{fire:true});assert.equal(b.hp,52);
   const blade=createPlayer('c','C');blade.weapon=4;const katana=createPlayer('d','D');katana.weapon=10;
   for(let i=0;i<60;i++){movePlayer(blade,cleanInput({z:1,sprint:true}),empty,TICK);movePlayer(katana,cleanInput({z:1,sprint:true}),empty,TICK);}assert(Math.abs(katana.v[2])>Math.abs(blade.v[2])+.9);
   m.projectiles=[{}];a.ammo[9]=0;startRound(m);assert.equal(m.projectiles.length,0);assert.equal(a.ammo[9],WEAPONS[9].ammo);
