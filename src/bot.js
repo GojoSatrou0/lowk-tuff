@@ -1,4 +1,4 @@
-import {mapById,rayWorld,eyeHeight,clamp} from './shared.js';
+import {mapById,rayWorld,eyeHeight,clamp,isMelee} from './shared.js';
 // Small grid pathfinder, so the opponent can route around cover instead of walking into it.
 function path(map,from,to){
   const cell=v=>clamp(Math.round((v+26)/2),0,26),key=(x,z)=>z*27+x,start=key(cell(from[0]),cell(from[2])),goal=key(cell(to[0]),cell(to[2]));
@@ -15,13 +15,15 @@ export function botInput(bot,p,target,match,dt,difficulty='normal'){
   const angle=Math.atan2(Math.sin(yaw-bot.yaw),Math.cos(yaw-bot.yaw));bot.yaw+=clamp(angle,-dt*3.6*factor,dt*3.6*factor);bot.pitch+=(pitch-bot.pitch)*Math.min(1,dt*5*factor);
   const origin=[p.p[0],p.p[1]+eyeHeight(p),p.p[2]],dir=[delta[0],delta[1],delta[2]],len=Math.hypot(...dir)||1;for(let i=0;i<3;i++)dir[i]/=len;
   const visible=rayWorld(origin,dir,map,dist)>=dist-.8;
+  const melee=isMelee(target.weapon)&&dist<6&&p.loadout.includes(4);
   bot.repath-=dt;bot.fireClock+=dt;
   if(bot.repath<=0){bot.route=path(map,p.p,target.p);bot.repath=.8;}
   let wx=0,wz=0;
-  if(visible&&dist<22){const strafe=Math.sin(match.time*.8)>0?1:-1;wx=Math.cos(yaw)*strafe;wz=Math.sin(yaw)*strafe;if(dist<7){wx-=Math.sin(yaw);wz+=Math.cos(yaw);}}
+  if(melee&&visible){if(dist>1.7){wx=Math.sin(yaw);wz=-Math.cos(yaw);}}
+  else if(visible&&dist<22){const strafe=Math.sin(match.time*.8)>0?1:-1;wx=Math.cos(yaw)*strafe;wz=Math.sin(yaw)*strafe;if(dist<7){wx-=Math.sin(yaw);wz+=Math.cos(yaw);}}
   else {while(bot.route.length&&Math.hypot(bot.route[0][0]-p.p[0],bot.route[0][1]-p.p[2])<1.2)bot.route.shift();const node=bot.route[0];if(node){wx=node[0]-p.p[0];wz=node[1]-p.p[2];const len=Math.hypot(wx,wz)||1;wx/=len;wz/=len;}}
   if(p.ground&&Math.hypot(p.p[0]-bot.last[0],p.p[2]-bot.last[2])<.005&&(wx||wz))bot.stuck+=dt;else bot.stuck=0;
   if(bot.stuck>.5){bot.jump++;bot.stuck=0;}bot.last=[...p.p];
   const error=Math.sin(match.time*3)*.017/factor;
-  return {seq:Math.floor(match.time*60),x:Math.cos(bot.yaw)*wx+Math.sin(bot.yaw)*wz,z:Math.sin(bot.yaw)*wx-Math.cos(bot.yaw)*wz,yaw:bot.yaw+error,pitch:bot.pitch,jump:bot.jump,slide:bot.slide,fire:visible&&Math.abs(angle)<.12&&bot.fireClock%(1.7/factor)<.65&&match.time>4/factor,reload:p.ammo[0]===0,ads:visible&&dist>12,sprint:!visible,weapon:0};
+  return {seq:Math.floor(match.time*60),x:Math.cos(bot.yaw)*wx+Math.sin(bot.yaw)*wz,z:Math.sin(bot.yaw)*wx-Math.cos(bot.yaw)*wz,yaw:bot.yaw+error,pitch:bot.pitch,jump:bot.jump,slide:bot.slide,fire:visible&&Math.abs(angle)<.12&&(melee?dist<2.9&&bot.fireClock%.7<.15:bot.fireClock%(1.7/factor)<.65&&match.time>4/factor),reload:!melee&&p.ammo[0]===0,ads:!melee&&visible&&dist>12,sprint:melee||!visible,weapon:melee?4:0};
 }

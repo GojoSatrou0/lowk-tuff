@@ -1,5 +1,7 @@
 // Shared deterministic rules: the browser predicts movement; the server owns combat.
 export const TICK = 1 / 60;
+export const MOVEMENT = Object.freeze({maxSpeed:32,redline:16,clashWindow:.12,clashMargin:1,clashStun:.75});
+export const horizontalSpeed = p => Math.hypot(p.v[0],p.v[2]);
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export const mix = (a, b, t) => a + (b - a) * t;
 export const WEAPONS = [
@@ -53,9 +55,10 @@ export function floorAt(map, x, z, ceiling = Infinity) {
   return floor;
 }
 export function createPlayer(id, name, slot = 0) {
-  return { id, name: String(name || 'Runner').slice(0,18), slot, p: [0,0,0], v:[0,0,0], yaw:0,pitch:0,hp:100,score:0,ready:false,weapon:0,loadout:[...DEFAULT_LOADOUT],ammo:WEAPONS.map(w=>w.ammo),reload:0,cooldown:0,burstLeft:0,charge:0,spin:0,parry:0,abilityCD:0,dash:0,ground:true,coyote:.1,jumps:0,slide:0,slideCD:0,crouch:false,ads:false,lastJump:0,lastSlide:0,lastFire:0,lastAlt:0,altHeld:false,trigger:false,shots:0,ack:0 };
+  return { id, name: String(name || 'Runner').slice(0,18), slot, p: [0,0,0], v:[0,0,0], yaw:0,pitch:0,hp:100,score:0,ready:false,weapon:0,loadout:[...DEFAULT_LOADOUT],ammo:WEAPONS.map(w=>w.ammo),reload:0,cooldown:0,burstLeft:0,charge:0,spin:0,parry:0,abilityCD:0,dash:0,stun:0,swing:null,ground:true,coyote:.1,jumps:0,slide:0,slideCD:0,crouch:false,ads:false,lastJump:0,lastSlide:0,lastFire:0,lastAlt:0,altHeld:false,trigger:false,shots:0,ack:0 };
 }
 export function resetPlayer(p, map) {
+  p.stun=0;p.swing=null;
   p.p=[...map.spawns[p.slot]];p.v=[0,0,0];p.yaw=p.slot===0?0:Math.PI;p.pitch=0;p.hp=100;p.ammo=WEAPONS.map(w=>w.ammo);p.weapon=p.loadout.includes(p.weapon)?p.weapon:p.loadout[0];p.reload=0;p.cooldown=.25;p.burstLeft=0;p.charge=0;p.spin=0;p.parry=0;p.abilityCD=0;p.dash=0;p.altHeld=false;p.slide=0;p.slideCD=0;p.ground=true;p.jumps=0;p.coyote=.1;p.trigger=false;p.crouch=false;
 }
 export function cleanInput(v = {}) {
@@ -63,14 +66,16 @@ export function cleanInput(v = {}) {
   return { seq:Math.floor(num(v.seq,0,1e9)), x:num(v.x,-1,1),z:num(v.z,-1,1),yaw:num(v.yaw,-1e6,1e6),pitch:num(v.pitch,-1.48,1.48),jump:Math.floor(num(v.jump,0,1e9)),slide:Math.floor(num(v.slide,0,1e9)),fireId:Math.floor(num(v.fireId,0,1e9)),altId:Math.floor(num(v.altId,0,1e9)),sprint:v.sprint===true,crouch:v.crouch===true,ads:v.ads===true,fire:v.fire===true,reload:v.reload===true,paused:v.paused===true,weapon:Math.floor(num(v.weapon,0,WEAPONS.length-1)) };
 }
 export function movePlayer(p, input, map, dt) {
+  const stunned=p.stun>0;p.stun=Math.max(0,(p.stun||0)-dt);
+  if(stunned)input={...input,x:0,z:0,ads:false,sprint:false,crouch:false};
   p.yaw=input.yaw;p.pitch=input.pitch;p.ads=input.ads&&!isMelee(p.weapon);
-  const jump=input.jump>p.lastJump, slide=input.slide>p.lastSlide;
+  const jump=!stunned&&input.jump>p.lastJump, slide=!stunned&&input.slide>p.lastSlide;
   p.lastJump=Math.max(p.lastJump,input.jump);p.lastSlide=Math.max(p.lastSlide,input.slide);p.slideCD=Math.max(0,p.slideCD-dt);
   p.coyote=p.ground?.1:Math.max(0,p.coyote-dt);
   let ix=input.x, iz=input.z, il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;}
   const dx=Math.cos(p.yaw)*ix+Math.sin(p.yaw)*iz,dz=Math.sin(p.yaw)*ix-Math.cos(p.yaw)*iz;
   const speed=Math.hypot(p.v[0],p.v[2]);
-  if(slide&&p.ground&&speed>6&&p.slideCD<=0){p.slide=.72;p.slideCD=1.05;const n=speed||1;p.v[0]=p.v[0]/n*16;p.v[2]=p.v[2]/n*16;}
+  if(slide&&p.ground&&speed>6&&p.slideCD<=0){p.slide=.8;p.slideCD=1.05;const boost=Math.min(28,Math.max(16,speed+3));p.v[0]=p.v[0]/speed*boost;p.v[2]=p.v[2]/speed*boost;}
   if(jump&&(p.ground||p.coyote>0||p.jumps<2)){
     p.jumps=p.ground||p.coyote>0?1:2;p.v[1]=p.jumps===1?9:8;p.ground=false;p.coyote=0;
     if(p.slide>0){p.v[0]*=1.08;p.v[2]*=1.08;p.slide=0;}
@@ -79,16 +84,30 @@ export function movePlayer(p, input, map, dt) {
   // Keep crouched beneath low ceilings until there is room to stand.
   if(!p.crouch)for(const b of map.boxes)if(Math.abs(p.p[0]-b.x)<b.w/2+.34&&Math.abs(p.p[2]-b.z)<b.d/2+.34&&p.p[1]<b.y&&p.p[1]+1.8>b.y)p.crouch=true;
   const height=p.crouch?1.15:1.8;
-  if(p.dash>0){p.dash=Math.max(0,p.dash-dt);}
-  else if(p.slide>0){p.slide-=dt;const drag=Math.exp(-1.1*dt);p.v[0]*=drag;p.v[2]*=drag;}
+  if(stunned){p.slide=0;p.dash=0;const drag=Math.exp(-9*dt);p.v[0]*=drag;p.v[2]*=drag;}
+  else if(p.dash>0){p.dash=Math.max(0,p.dash-dt);}
+  else if(p.slide>0){p.slide=Math.max(0,p.slide-dt);const drag=Math.exp(-.45*dt);p.v[0]*=drag;p.v[2]*=drag;}
   else {
     const max=(p.ads?4.8:p.crouch?4:input.sprint?(WEAPONS[p.weapon].sprint||(isMelee(p.weapon)?13:11.3)):8)*(WEAPONS[p.weapon].moveScale||1);
-    const acc=p.ground?14:2.5;
-    const blend=1-Math.exp(-acc*dt);
-    p.v[0]=mix(p.v[0],dx*max,blend);p.v[2]=mix(p.v[2],dz*max,blend);
+    if(p.ground||p.ads){
+      const aligned=il>0&&(p.v[0]*dx+p.v[2]*dz)>speed*.8;
+      const acc=p.ads?14:speed>max&&aligned?2.2:14,blend=1-Math.exp(-acc*dt);
+      p.v[0]=mix(p.v[0],dx*max,blend);p.v[2]=mix(p.v[2],dz*max,blend);
+    }else{
+      // Air steering adds only missing velocity along the wish direction. It does
+      // not pull an earned slide-jump back down to ordinary running speed.
+      const wish=Math.hypot(dx,dz),dot=wish?(p.v[0]*dx+p.v[2]*dz)/wish:0;
+      const add=wish?Math.min(18*dt,Math.max(0,max-dot))*Math.min(wish,1):0;
+      p.v[0]=(p.v[0]+(wish?dx/wish*add:0))*Math.exp(-.08*dt);
+      p.v[2]=(p.v[2]+(wish?dz/wish*add:0))*Math.exp(-.08*dt);
+    }
   }
+  const cap=horizontalSpeed(p);if(cap>MOVEMENT.maxSpeed){p.v[0]*=MOVEMENT.maxSpeed/cap;p.v[2]*=MOVEMENT.maxSpeed/cap;}
   const oldY=p.p[1];p.v[1]-=25*dt;
-  p.p[0]+=p.v[0]*dt;p.p[2]+=p.v[2]*dt;
+  // Substeps keep fast slides and knockbacks from tunneling through thin cover.
+  const steps=Math.max(1,Math.ceil(horizontalSpeed(p)*dt/.25));
+  for(let step=0;step<steps;step++){
+  p.p[0]+=p.v[0]*dt/steps;p.p[2]+=p.v[2]*dt/steps;
   for(const b of map.boxes){
     if(p.p[1]>=b.y+b.h-.3||p.p[1]+height<=b.y+.02)continue;
     const rx=b.w/2+.36,rz=b.d/2+.36,ax=p.p[0]-b.x,az=p.p[2]-b.z;
@@ -96,7 +115,8 @@ export function movePlayer(p, input, map, dt) {
   }
   // Solid ramp sides; the low edge remains walkable.
   for(const r of map.ramps){const h=rampHeight(r,p.p[0],p.p[2]);if(h>oldY+.6&&oldY+height>r.y){const rx=r.w/2+.36,rz=r.d/2+.36,ax=p.p[0]-r.x,az=p.p[2]-r.z;if(rx-Math.abs(ax)<rz-Math.abs(az)){p.p[0]=r.x+Math.sign(ax||1)*rx;p.v[0]=0;}else{p.p[2]=r.z+Math.sign(az||1)*rz;p.v[2]=0;}}}
-  p.p[0]=clamp(p.p[0],-map.extent+.6,map.extent-.6);p.p[2]=clamp(p.p[2],-map.extent+.6,map.extent-.6);
+  for(const axis of [0,2]){const bounded=clamp(p.p[axis],-map.extent+.6,map.extent-.6);if(bounded!==p.p[axis])p.v[axis]=0;p.p[axis]=bounded;}
+  }
   p.p[1]+=p.v[1]*dt;
   if(p.v[1]>0)for(const b of map.boxes)if(Math.abs(p.p[0]-b.x)<b.w/2+.32&&Math.abs(p.p[2]-b.z)<b.d/2+.32&&oldY+height<=b.y+.03&&p.p[1]+height>b.y){p.p[1]=b.y-height;p.v[1]=0;}
   const floor=floorAt(map,p.p[0],p.p[2],oldY+.6);
@@ -142,6 +162,34 @@ export function startRound(m){m.phase='countdown';m.clock=3;m.roundWinner=null;m
 export function endRound(m,winner){if(m.phase!=='live')return;m.roundWinner=winner?.id||null;if(winner)winner.score++;m.phase=winner?.score>=5?'finished':'intermission';m.clock=m.phase==='finished'?0:3.5;m.winner=m.phase==='finished'?winner.id:null;emit(m,m.phase==='finished'?'matchEnd':'roundEnd',{winner:m.roundWinner});}
 export function readyPlayer(m,p){p.ready=true;if(m.players.length===2&&m.players.every(p=>p.ready)&&(m.phase==='waiting'||m.phase==='finished')){for(const x of m.players){x.score=0;x.ready=false;}m.round=1;m.winner=null;startRound(m);}}
 function randomShot(seed){let n=seed|0;return()=>{n=(Math.imul(n,1664525)+1013904223)|0;return(n>>>0)/4294967296;};}
+function canClash(a,b,map){
+  const origin=[a.p[0],a.p[1]+eyeHeight(a),a.p[2]],target=[b.p[0],b.p[1]+eyeHeight(b),b.p[2]];
+  const delta=target.map((v,i)=>v-origin[i]),distance=length(delta),dir=norm(delta);
+  if(distance>Math.min(WEAPONS[a.swing.weapon].range,WEAPONS[b.swing.weapon].range)+.3||distance<.01)return false;
+  const facing=forward(a.yaw,a.pitch).reduce((s,v,i)=>s+v*dir[i],0);
+  const opposing=forward(b.yaw,b.pitch).reduce((s,v,i)=>s-v*dir[i],0);
+  return facing>.35&&opposing>.35&&rayWorld(origin,dir,map,distance)>=distance-.05;
+}
+export function resolveMelee(m,map,dt){
+  const swingers=m.players.filter(p=>p.hp>0&&p.stun<=0&&p.swing);
+  for(let i=0;i<swingers.length;i++)for(let j=i+1;j<swingers.length;j++){
+    const a=swingers[i],b=swingers[j];if(!a.swing||!b.swing||!canClash(a,b,map))continue;
+    const speeds=[horizontalSpeed(a),horizontalSpeed(b)],gap=speeds[0]-speeds[1];
+    const winner=Math.abs(gap)<MOVEMENT.clashMargin?null:gap>0?a:b,loser=winner?(winner===a?b:a):null;
+    const position=a.p.map((v,k)=>(v+b.p[k])/2+(k===1?1.25:0));
+    for(const p of [a,b]){p.swing=null;p.parry=0;p.burstLeft=0;p.charge=0;p.spin=0;p.dash=0;p.slide=0;}
+    const repel=(p,other,power)=>{const dx=p.p[0]-other.p[0],dz=p.p[2]-other.p[2],len=Math.hypot(dx,dz)||1;p.v[0]=dx/len*power;p.v[2]=dz/len*power;};
+    if(winner){loser.stun=MOVEMENT.clashStun;loser.cooldown=Math.max(loser.cooldown,loser.stun);repel(loser,winner,8);winner.cooldown=Math.min(winner.cooldown,.18);}
+    else{for(const p of [a,b]){p.stun=.18;p.cooldown=Math.max(p.cooldown,.25);}repel(a,b,4);repel(b,a,4);}
+    emit(m,'clash',{players:[a.id,b.id],speeds,winner:winner?.id||null,loser:loser?.id||null,position});
+  }
+  for(const p of m.players){if(!p.swing)continue;
+    if(p.hp<=0||p.stun>0||p.weapon!==p.swing.weapon){p.swing=null;continue;}
+    p.swing.remaining-=dt;if(p.swing.remaining>1e-7)continue;
+    const w=WEAPONS[p.swing.weapon],origin=[p.p[0],p.p[1]+eyeHeight(p),p.p[2]],hit=castShot(origin,forward(p.yaw,p.pitch),map,m.players,p.id,w.range);
+    p.swing=null;if(hit.target)damagePlayer(m,hit.target,p.id,p.weapon,w.damage,false,hit.p);
+  }
+}
 // All damage paths use this gate: rockets and every melee weapon bypass the guard.
 export function damagePlayer(m,target,attacker,weapon,amount,head,position){
   if(target.hp<=0)return false;
@@ -160,10 +208,10 @@ export function stepMatch(m,inputs,dt=TICK){
   // Resolve everyone's equipment, ability input, and movement before any shot.
   // A parry pressed on this tick must work regardless of player array order.
   for(const p of m.players){if(p.hp<=0)continue;const i=controls.get(p.id);
-    if(i.weapon!==p.weapon&&p.loadout.includes(i.weapon)){p.weapon=i.weapon;p.reload=0;p.burstLeft=0;p.charge=0;p.spin=0;p.parry=0;p.cooldown=Math.max(p.cooldown,.22);}
+    if(p.stun<=0&&i.weapon!==p.weapon&&p.loadout.includes(i.weapon)){p.weapon=i.weapon;p.swing=null;p.reload=0;p.burstLeft=0;p.charge=0;p.spin=0;p.parry=0;p.cooldown=Math.max(p.cooldown,.22);}
     p.parry=Math.max(0,p.parry-dt);p.abilityCD=Math.max(0,p.abilityCD-dt);
     const w=WEAPONS[p.weapon],altPressed=i.altId>p.lastAlt||(i.ads&&!p.altHeld);p.lastAlt=Math.max(p.lastAlt,i.altId);p.altHeld=i.ads;
-    if(altPressed&&p.abilityCD<=0&&(w.parry||w.dash)){
+    if(altPressed&&p.stun<=0&&!p.swing&&p.abilityCD<=0&&(w.parry||w.dash)){
       p.abilityCD=w.abilityCooldown;
       if(w.parry){p.parry=w.parry;emit(m,'guard',{player:p.id});}
       if(w.dash){const x=i.x,z=i.z||(!i.x?1:0),l=Math.hypot(x,z)||1;p.v[0]=(Math.cos(i.yaw)*x+Math.sin(i.yaw)*z)/l*24;p.v[2]=(Math.sin(i.yaw)*x-Math.cos(i.yaw)*z)/l*24;p.dash=w.dash;p.slide=0;emit(m,'dash',{player:p.id});}
@@ -173,6 +221,7 @@ export function stepMatch(m,inputs,dt=TICK){
     p.spin=w.spinup&&i.fire&&p.reload<=0?Math.min(1,p.spin+dt/w.spinup):Math.max(0,p.spin-dt*3);
   }
   for(const p of m.players){if(p.hp<=0)continue;const i=controls.get(p.id),w=WEAPONS[p.weapon];
+    if(p.stun>0){p.lastFire=Math.max(p.lastFire,i.fireId);p.trigger=i.fire;continue;}
     p.charge=w.charge&&i.ads&&p.reload<=0?Math.min(1,p.charge+dt/1.1):0;
     if(i.reload&&p.reload<=0&&w.ammo>0&&p.ammo[p.weapon]<w.ammo){p.reload=w.reload;p.burstLeft=0;emit(m,'reload',{player:p.id});}
     const firePressed=i.fireId>p.lastFire;p.lastFire=Math.max(p.lastFire,i.fireId);
@@ -182,7 +231,9 @@ export function stepMatch(m,inputs,dt=TICK){
         if(w.burst&&p.burstLeft===0)p.burstLeft=w.burst;
         if(p.burstLeft>0)p.burstLeft--;p.cooldown=p.burstLeft>0?w.burstRate:w.rate;if(w.ammo>0)p.ammo[p.weapon]--;p.shots++;
         const origin=[p.p[0],p.p[1]+eyeHeight(p),p.p[2]],rng=randomShot(p.shots*127+p.slot*4099),impacts=[];
-        if(w.projectile){
+        if(isMelee(p.weapon)){
+          p.swing={weapon:p.weapon,remaining:MOVEMENT.clashWindow};
+        }else if(w.projectile){
           const direction=forward(p.yaw,p.pitch),power=w.charge?.55+.45*p.charge:1,speed=w.speed*(w.charge?.6+.4*p.charge:1);
           m.projectiles.push({id:++m.projectileSeq,owner:p.id,weapon:p.weapon,kind:w.projectile,p:[...origin],v:direction.map(x=>x*speed),damage:w.damage*power,life:w.range/speed});p.charge=0;
           if(w.autoReload){p.reload=w.reload;emit(m,'reload',{player:p.id});}
@@ -204,6 +255,7 @@ export function stepMatch(m,inputs,dt=TICK){
       }
     }p.trigger=i.fire;
   }
+  resolveMelee(m,map,dt);
   stepProjectiles(m,map,dt);
   // Keep blast-jump impulse, but restore health and never award or end a round.
   if(m.freePlay){for(const p of m.players)p.hp=100;return;}
