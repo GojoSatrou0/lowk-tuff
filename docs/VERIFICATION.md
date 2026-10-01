@@ -1,5 +1,12 @@
 # Verification
 
+## Version 1.9.2 overhead beam update
+
+- Syntax checks and all **103 tests passed** on October 1, 2026.
+- Foundry and Afterlight now render their overhead gantries from the same solid boxes used for grapple raycasts, movement collision, landing and shot obstruction. The beam keeps its existing dimensions and position; Sunbreak has no added invisible beam.
+- Tests attach across the beam's span on both maps, verify upward pull and release, reject an out-of-range beam, leave adjacent sky open, stop a rising player beneath the beam and support landing on top.
+- An actual HTTP player grapples the Foundry beam while a WebSocket opponent receives the same server-selected anchor and upward movement. These checks use simulation and network clients; they do not claim a manual held-Q browser playthrough.
+
 ## Version 1.9.1 animation update
 
 - Syntax checks and all **100 tests passed** on October 1, 2026. Presentation checks cover all 15 weapons, bounded recoil and recovery, actual reload durations, equip timing, sniper bolt timing, scope cooldown/readiness, and reduced-motion behavior.
