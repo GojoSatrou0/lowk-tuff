@@ -1,5 +1,13 @@
 # Verification
 
+## Version 1.10 arsenal update
+
+- Syntax checks and all **108 tests passed** on October 1, 2026. The renderer passed another syntax check after its sight alignment adjustment.
+- New rules cover the crossbow's uncharged projectile, damage, flight, cover, parry and automatic recocking; DMR/pistol click gating, ammo and reloads; and the hammer's single swing, guard bypass, knockback and absence of gun effects. Every pairing of the four melee weapons is covered by clash tests.
+- All 19 weapons pass the animation bounds and grapple checks. Purchases of all four new weapons charge once, preserve the 100-coin starting balance and survive profile serialization. An actual HTTP purchaser equips and fires the four weapons while a WebSocket opponent receives their attack events.
+- In an isolated browser server with a disposable 1,100-coin wallet, all four purchases left 175 coins and equipped separate slots. Free Play shots triggered crossbow recocking, DMR ammo 12 to 11, pistol ammo 14 to 13 and the hammer swing with infinite ammo. Application warning/error logs were empty.
+- Inspected all four first-person models in a renderer fixture, including the hammer swing and the DMR reflex dot aligned to screen center at rest. No fixture warning/error logs were recorded. Test funding and fixture controls are excluded from public deployment.
+
 ## Version 1.9.2 overhead beam update
 
 - Syntax checks and all **103 tests passed** on October 1, 2026.
