@@ -99,6 +99,7 @@ function build(map){
     add('disc',[0,.026,sign*23],[5,1,5],[...color(accent).slice(0,3),.4]);
   }
   for(const b of map.boxes){
+    if(b.kind==='gantry'){block([b.x,b.y+b.h/2,b.z],[b.w,b.h,b.d],dark);continue;}
     const stone=b.kind==='stone';const base=b.kind==='cover'?(sand?'#476b6c':'#adbbb8'):wall;
     block([b.x,b.y+b.h/2,b.z],[b.w,b.h,b.d],base);
     block([b.x,b.y+.06,b.z],[b.w+.35,.12,b.d+.35],dark);
@@ -132,7 +133,7 @@ function build(map){
     else {const h=10+(i*7%25);block([x,h/2-3,z],[7+(i%3)*3,h,8],night?'#263b50':'#8faaa9');block([x,h-2.8,z],[8,.4,9],night?'#42617a':'#667d81');if(night)for(let y=1;y<h-2;y+=3)block([x,y,z+4.02],[4,.24,.03],i%3===0?'#d99aae':'#70bec7',[0,0,0],1);}
   }
   // Overhead industrial gantry / rooftop antenna.
-  if(!sand){for(const x of [-25,25])block([x,8,-10],[.55,8,.55],dark);block([0,12,-10],[50,.55,.7],dark);for(let x=-22;x<24;x+=7)block([x,11.66,-10],[2,.1,.3],night?'#96e6e1':'#fff1c4',[0,0,0],1);}
+  if(!sand){for(let x=-22;x<24;x+=7)block([x,11.66,-10],[2,.1,.3],night?'#96e6e1':'#fff1c4',[0,0,0],1);}
   else for(const x of [-23,23])for(const z of [-14,14]){add('cyl',[x,1.3,z],[.42,2.6,.42],'#4a7870');add('cyl',[x+.4,1.5,z],[.8,.3,.3],'#4a7870',[0,0,Math.PI/2]);}
   // Bake static geometry per material: tens of GPU calls instead of hundreds.
   const groups=new Map();

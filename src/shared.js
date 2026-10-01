@@ -26,10 +26,13 @@ export const DEFAULT_LOADOUT = [0,1,2,3,4];
 export const isMelee = id => WEAPONS[id]?.ammo === -1;
 const box = (x, z, w, h, d, kind = 'cover', y = 0) => ({ x, z, w, h, d, y, kind });
 const ramp = (x, z, w, h, d, dir = 1, y = 0) => ({ x, z, w, h, d, dir, y });
+// These exact solids also drive rendering: the overhead beam is a real grapple
+// target and platform, with no invisible hitbox stretched over the open sky.
+const gantry = () => [box(-25,-10,.55,8,.55,'gantry',4),box(25,-10,.55,8,.55,'gantry',4),box(0,-10,50,.55,.7,'gantry',11.725)];
 export const MAPS = [
   { id: 'foundry', name: 'The Foundry', subtitle: 'Industrial / balanced', description: 'Three lanes. Elevated flanks. No place to stand still.', tag: 'ALL-ROUNDER', sky: '#bbcace', floor: '#56636a', wall: '#cfcdc0', accent: '#ff7547', extent: 28,
     spawns: [[0, 0, 23], [0, 0, -23]],
-    boxes: [box(-18,0,7,3.5,14,'platform'),box(18,0,7,3.5,14,'platform'),box(0,0,5,4,7,'reactor'),box(-8,-9,4,2.5,6),box(8,9,4,2.5,6),box(-8,12,4,2,3),box(8,-12,4,2,3),box(-23,-20,4,5,8,'tower'),box(23,20,4,5,8,'tower')],
+    boxes: [box(-18,0,7,3.5,14,'platform'),box(18,0,7,3.5,14,'platform'),box(0,0,5,4,7,'reactor'),box(-8,-9,4,2.5,6),box(8,9,4,2.5,6),box(-8,12,4,2,3),box(8,-12,4,2,3),box(-23,-20,4,5,8,'tower'),box(23,20,4,5,8,'tower'),...gantry()],
     ramps: [ramp(-18,-11,7,3.5,8,1),ramp(-18,11,7,3.5,8,-1),ramp(18,-11,7,3.5,8,1),ramp(18,11,7,3.5,8,-1)] },
   { id: 'canyon', name: 'Sunbreak', subtitle: 'Canyon / close quarters', description: 'Sun-cut stone, fast corners, and high-ground routes.', tag: 'CLOSE QUARTERS', sky: '#e8c9a0', floor: '#b48b62', wall: '#c08b60', accent: '#72cbbb', extent: 28,
     spawns: [[-10,0,23],[10,0,-23]],
@@ -37,7 +40,7 @@ export const MAPS = [
     ramps: [ramp(-17,-12,8,4,10,1),ramp(-17,12,8,4,10,-1),ramp(17,-12,8,4,10,1),ramp(17,12,8,4,10,-1)] },
   { id: 'skyline', name: 'Afterlight', subtitle: 'Rooftop / long sightlines', description: 'A neon rooftop with stacked routes and open sightlines.', tag: 'VERTICAL PLAY', sky: '#172737', floor: '#24394b', wall: '#405666', accent: '#8be3e6', extent: 28,
     spawns: [[0,0,23],[0,0,-23]],
-    boxes: [box(-17,0,8,5,16,'platform'),box(17,0,8,5,16,'platform'),box(0,0,12,.7,6,'bridge',5),box(-8,13,4,2.6,4),box(8,-13,4,2.6,4),box(7,13,3,1.4,3),box(-7,-13,3,1.4,3),box(0,0,3,2.4,3,'reactor')],
+    boxes: [box(-17,0,8,5,16,'platform'),box(17,0,8,5,16,'platform'),box(0,0,12,.7,6,'bridge',5),box(-8,13,4,2.6,4),box(8,-13,4,2.6,4),box(7,13,3,1.4,3),box(-7,-13,3,1.4,3),box(0,0,3,2.4,3,'reactor'),...gantry()],
     ramps: [ramp(-17,-14,8,5,12,1),ramp(-17,14,8,5,12,-1),ramp(17,-14,8,5,12,1),ramp(17,14,8,5,12,-1),ramp(-9,0,6,5.7,6,1),ramp(9,0,6,5.7,6,-1)] },
 ];
 export const mapById = id => MAPS.find(m => m.id === id) || MAPS[0];
