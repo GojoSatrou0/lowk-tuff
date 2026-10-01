@@ -10,7 +10,7 @@ function duel(aSpeed=18,bSpeed=8,reverse=false,weapons=[4,10]){
 }
 function tick(m,a={},b={}){const players=Object.fromEntries(m.players.map(p=>[p.id,p]));stepMatch(m,Object.fromEntries(['a','b'].map(id=>[id,cleanInput({weapon:players[id].weapon,yaw:players[id].yaw,...(id==='a'?a:b)})])));}
 test('every melee pairing clashes without damage; actual faster player wins in either iteration order',()=>{
-  for(const weaponA of [4,10,14])for(const weaponB of [4,10,14])for(const reversed of [false,true]){
+  for(const weaponA of [4,10,14,18])for(const weaponB of [4,10,14,18])for(const reversed of [false,true]){
     const {m,a,b}=duel(18,8,reversed,[weaponA,weaponB]);tick(m,{fireId:1},{fireId:1});
     const event=m.events.find(e=>e.type==='clash');assert(event);assert.equal(event.winner,'a');assert.equal(event.loser,'b');assert.equal(a.hp,100);assert.equal(b.hp,100);assert.equal(b.stun,MOVEMENT.clashStun);assert.equal(a.stun,0);assert.equal(a.swing,null);assert.equal(b.swing,null);
     tick(m,{fireId:1},{fireId:1});assert.equal(m.events.filter(e=>e.type==='clash').length,1);

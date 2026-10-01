@@ -5,14 +5,14 @@ const empty={extent:100,boxes:[],ramps:[]};
 function duel(id,reverse=false){const m=createMatch();m.phase='live';m.clock=90;const a=createPlayer('a','A'),b=createPlayer('b','B',1);a.p=[-12,0,12];b.p=[-12,0,4];a.weapon=id;a.loadout=[id,1,2,3,4];b.weapon=10;b.loadout=[10,0,2,3,4];m.players=reverse?[b,a]:[a,b];return {m,a,b};}
 function run(m,a={},b={}){stepMatch(m,{a:cleanInput({weapon:m.players.find(p=>p.id==='a').weapon,...a}),b:cleanInput({weapon:m.players.find(p=>p.id==='b').weapon,...b})});}
 test('same-tick parry blocks every hitscan gun and flame, independent of player order',()=>{
-  for(const id of [0,1,2,3,5,6,7,11,12,13])for(const reversed of [false,true]){const {m,a,b}=duel(id,reversed);a.spin=1;run(m,{fire:true,ads:true},{altId:1});assert.equal(b.hp,100,WEAPONS[id].name);assert(m.events.some(e=>e.type==='parry'),WEAPONS[id].name);assert(!m.events.some(e=>e.type==='hit'));}
+  for(const id of [0,1,2,3,5,6,7,11,12,13,16,17])for(const reversed of [false,true]){const {m,a,b}=duel(id,reversed);a.spin=1;run(m,{fire:true,ads:true},{altId:1});assert.equal(b.hp,100,WEAPONS[id].name);assert(m.events.some(e=>e.type==='parry'),WEAPONS[id].name);assert(!m.events.some(e=>e.type==='hit'));}
 });
 test('parry catches a traveling arrow and consumes it without applying damage',()=>{
   const {m,b}=duel(8);run(m,{fire:true},{altId:1});assert.equal(m.projectiles.length,1);
   for(let i=0;i<35;i++)run(m,{}, {altId:1});assert.equal(b.hp,100);assert.equal(m.projectiles.length,0);assert(m.events.some(e=>e.type==='parry'&&e.weapon===8));
 });
 test('blade, katana, and scythe all damage a parrying katana user',()=>{
-  for(const id of [4,10,14]){const {m,b}=duel(id);b.p=[-12,0,9.5];run(m,{fire:true},{altId:1});for(let n=0;n<8;n++)run(m,{fire:true},{altId:1});assert(b.parry>0);assert.equal(b.hp,100-WEAPONS[id].damage,WEAPONS[id].name);assert(!m.events.some(e=>e.type==='parry'));}
+  for(const id of [4,10,14,18]){const {m,b}=duel(id);b.p=[-12,0,9.5];run(m,{fire:true},{altId:1});for(let n=0;n<8;n++)run(m,{fire:true},{altId:1});assert(b.parry>0);assert.equal(b.hp,100-WEAPONS[id].damage,WEAPONS[id].name);assert(!m.events.some(e=>e.type==='parry'));}
 });
 test('rocket direct hits and splash both bypass parry',()=>{
   for(const direct of [true,false]){const {m,b}=duel(9);b.p=[0,0,0];b.parry=.7;m.projectiles=[{id:1,owner:'a',weapon:9,kind:'rocket',p:direct?[0,1,2]:[1,1,0],v:direct?[0,0,-24]:[0,-24,0],damage:85,life:4}];stepProjectiles(m,empty,.1);assert(b.hp<100);assert(!m.events.some(e=>e.type==='parry'));}
