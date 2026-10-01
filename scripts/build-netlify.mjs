@@ -22,7 +22,7 @@ export async function buildNetlify(value,{outputRoot=ROOT,fetchImpl=fetch}={}){
   if(old?.isSymbolicLink()||(old&&!old.isDirectory()))throw Error('dist must be a normal build directory.');
   if(old)await rm(out,{recursive:true,force:true});
   await mkdir(out,{recursive:true});
-  for(const file of ['index.html','styles.css','app-icon.svg','manifest.webmanifest','src','assets'])await cp(path.join(ROOT,file),path.join(out,file),{recursive:true});
+  for(const file of ['index.html','styles.css','app-icon.svg','manifest.webmanifest','robots.txt','sitemap.xml','src','assets'])await cp(path.join(ROOT,file),path.join(out,file),{recursive:true});
   await writeFile(path.join(out,'src/deployment.js'),'export const FORCE_HTTP=true;\n');
   await writeFile(path.join(out,'_redirects'),config.redirects);
   await writeFile(path.join(out,'_headers'),'/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n/src/*\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n');
