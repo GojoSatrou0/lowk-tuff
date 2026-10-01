@@ -1,5 +1,14 @@
 # Verification
 
+## Version 1.9.1 animation update
+
+- Syntax checks and all **100 tests passed** on October 1, 2026. Presentation checks cover all 15 weapons, bounded recoil and recovery, actual reload durations, equip timing, sniper bolt timing, scope cooldown/readiness, and reduced-motion behavior.
+- A local browser fixture using the production renderer and scope helper displayed all 15 weapons, the sniper bolt/hand pose, and scoped shot and shell-ejection poses. The aiming reticle stayed at (640, 360) in the 1280 × 720 viewport during both the initial kick and bolt cycle.
+- Reduced-motion mode set scope kick, flash, bolt movement and casing visibility to zero while retaining the cycling/ready indicator. No new browser errors appeared after the renderer correction found during this check.
+- In the actual local game, Free Play rendered normally, switching to Longshot showed five rounds, and a left-click shot reduced ammo to four and triggered the bolt cycle. Application warning/error logs were empty.
+- Scoped poses were verified with explicit fixture controls; a held-right-mouse scoped firing playthrough was not performed in the embedded browser. Camera yaw/pitch and shot directions are unchanged.
+- This is a frontend presentation update compatible with the deployed 1.9.0 backend; no database migration or game-server restart is required.
+
 ## Version 1.9 training and grapple update
 
 - Syntax checks and all **96 tests passed** on October 1, 2026.
