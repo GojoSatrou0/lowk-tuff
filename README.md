@@ -24,6 +24,10 @@ npm start
 
 ## What is included
 
+- **Parry Practice:** a borrowed katana, timed incoming shots, a green parry cue, instant retries, accuracy counts and streaks. Press F or right mouse when the cue appears.
+- **Stun Practice:** learn to win real blade clashes with speed. Press T to toggle a stationary or sprinting trainer; the sprinting trainer also lets you practice recovering from a lost clash. Both drills run locally on a clear Foundry lane, lend their kit, and award no coins. Esc pauses; Retry resets the attempt while keeping session statistics. Leaving restores the normal loadout.
+- **Grapple movement ability:** hold Q while aiming at solid cover within 30 m; release Q to let go and carry momentum. It works alongside any weapon without taking a loadout slot. A tether lasts up to 1.8 seconds and recharges for 2.5 seconds after detaching. Walls, range, collision, stun, death and stale network input all restrict it. It cannot grab opponents. Aim higher on cover to gain height.
+
 - A redesigned live 3D lobby, armory, scoreboard, health/ammo HUD, and round/match screens.
 - **The Foundry:** balanced industrial lanes and four ramps to elevated side routes.
 - **Sunbreak:** canyon cover and raised flanking routes.

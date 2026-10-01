@@ -1,13 +1,13 @@
 {
   "name": "velocity-arena",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
   "description": "A movement-first arena FPS expanded from Open World Physics Lab",
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
-    "check": "node --check src/game.js && node --check src/shared.js && node --check src/renderer.js && node --check src/shop.js && node --check src/economy.js && node --check src/network.js && node --check profile-store.js && node --check server.js && node --check src/crosshair.js && node --check src/crosshair-model.js && node --check src/weapon-presentation.js && node --check src/crosshair-background.js && node --check src/accounts.js && node --check src/api.js && node --check src/deployment.js && node --check scripts/build-netlify.mjs && node --check database/neon.js && node --check database/profile-store.js && node --check database/schema.js && node --check scripts/migrate.mjs && node --check scripts/verify-neon.mjs",
+    "check": "node --check src/training.js && node --check src/game.js && node --check src/shared.js && node --check src/renderer.js && node --check src/shop.js && node --check src/economy.js && node --check src/network.js && node --check profile-store.js && node --check server.js && node --check src/crosshair.js && node --check src/crosshair-model.js && node --check src/weapon-presentation.js && node --check src/crosshair-background.js && node --check src/accounts.js && node --check src/api.js && node --check src/deployment.js && node --check scripts/build-netlify.mjs && node --check database/neon.js && node --check database/profile-store.js && node --check database/schema.js && node --check scripts/migrate.mjs && node --check scripts/verify-neon.mjs",
     "build:netlify": "node scripts/build-netlify.mjs",
     "db:migrate": "node scripts/migrate.mjs"
   },

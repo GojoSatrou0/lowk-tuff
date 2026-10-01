@@ -107,7 +107,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const url=new URL(req.url,'http://localhost'),ip=req.socket.remoteAddress;
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
     try{
-      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:7,release:'1.8.0',speedClashes:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
+      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:7,release:'1.9.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
       if(url.pathname==='/api'||url.pathname==='/api/auth'){
         if(req.method!=='POST'){response(res,405,{error:'Use POST'});return;}
         if(!safeOrigin(req)){response(res,403,{error:'Origin not allowed'});return;}
@@ -152,7 +152,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const now=performance.now();acc=Math.min(acc+(now-last)/1000,.15);last=now;
     while(acc>=TICK){
       for(const r of rooms.values()){
-        const inputs={};for(const p of r.match.players){const i=r.inputs[p.id];const s=[...sessions.values()].find(s=>s.id===p.id);inputs[p.id]=s&&Date.now()-s.inputAt<250?i:{...i,x:0,z:0,fire:false,jump:p.lastJump,slide:p.lastSlide,yaw:p.yaw,pitch:p.pitch,weapon:p.weapon};}
+        const inputs={};for(const p of r.match.players){const i=r.inputs[p.id];const s=[...sessions.values()].find(s=>s.id===p.id);inputs[p.id]=s&&Date.now()-s.inputAt<250?i:{...i,x:0,z:0,fire:false,grapple:false,grappleId:p.lastGrapple,jump:p.lastJump,slide:p.lastSlide,yaw:p.yaw,pitch:p.pitch,weapon:p.weapon};}
         if(r.practice){const human=r.match.players.find(p=>p.id!=='bot'),s=[...sessions.values()].find(s=>s.id===human?.id),i=inputs[human?.id];r.paused=!s||Date.now()-s.inputAt>500||!i||i.paused;
           if(r.paused)continue;
           inputs.bot=botInput(r.bot,r.match.players.find(p=>p.id==='bot'),human,r.match,TICK,r.difficulty);
