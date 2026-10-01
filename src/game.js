@@ -6,7 +6,7 @@ import { createBot,botInput } from './bot.js';
 import { createShop } from './shop.js';
 import { createAccounts } from './accounts.js';
 import { createCrosshair } from './crosshair.js';
-import { attackEffects } from './weapon-presentation.js';
+import { attackEffects,sniperScope,paintSniperScope } from './weapon-presentation.js';
 
 const $=id=>document.getElementById(id),canvas=$('world');
 const defaults={sensitivity:.85,ads:.55,fov:86,volume:.35,quality:1,difficulty:'normal',raw:true,reduced:false,name:'Runner'};
@@ -16,7 +16,7 @@ for(const [key,min,max]of [['sensitivity',.2,2],['ads',.2,1],['fov',70,110],['vo
 const save=()=>{try{localStorage.setItem('velocity-settings',JSON.stringify(settings));}catch{}};
 const state={mode:'menu',map:MAPS[0],match:null,you:'you',local:null,paused:false,hosted:false,matchCoins:0,bot:createBot(),event:0,phase:'',round:0,remote:new Map(),seq:0};
 const input={x:0,z:0,yaw:0,pitch:0,jump:0,slide:0,weapon:0,fire:false,fireId:0,altId:0,grapple:false,grappleId:0,ads:false,reload:false,sprint:false,crouch:false,seq:0};
-const keys=new Set(),fx={ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0},tracers=[],explosions=[],flames=[],casings=[];
+const keys=new Set(),fx={ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:10,heldWeapon:-1,sprint:0,guard:0,scopeKick:0},tracers=[],explosions=[],flames=[],casings=[];
 let renderer,audio=null,toastTimer,feedTimer,lastHP=100,fps=60,frameCount=0,fpsTime=performance.now(),last=performance.now(),accumulator=0,time=0,menuView='play',freeLook=false,connecting=false;
 try{renderer=createRenderer(canvas);}catch(e){$('fatal').hidden=false;$('fatal-message').textContent=e.message;throw e;}
 
@@ -74,7 +74,7 @@ function pauseNote(){return state.mode==='training'?'Drill paused. Retry resets 
 function setGameUI(){const playing=active(),free=state.mode==='freeplay',training=state.mode==='training';$('menu').hidden=playing||state.match?.phase==='finished';$('hud').hidden=!playing;$('hud-map').textContent=state.map.name.toUpperCase();$('match-score').hidden=free||training;$('freeplay-status').hidden=!free;$('training-status').hidden=!training;$('hud').classList.toggle('in-training',training);$('freeplay-reset').hidden=!(free||training);$('freeplay-reset').textContent=training?'RETRY DRILL ↻':'RESET POSITION & AMMO ↻';$('leave').textContent=training?'LEAVE PRACTICE':free?'LEAVE FREE PLAY':'LEAVE MATCH';$('pause-note').textContent=pauseNote();document.querySelector('.hud-wallet').hidden=free||training;}
 function syncFreePlayPlayer(){
   const p=state.local;clearInput();input.yaw=p.yaw;input.pitch=p.pitch;input.weapon=p.weapon;input.jump=p.lastJump;input.slide=p.lastSlide;input.fireId=p.lastFire;input.altId=p.lastAlt;input.grappleId=p.lastGrapple||0;
-  lastHP=100;tracers.length=flames.length=explosions.length=casings.length=0;Object.assign(fx,{ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0});$('coin-gain').textContent='';$('combat-feed').textContent='';
+  lastHP=100;tracers.length=flames.length=explosions.length=casings.length=0;Object.assign(fx,{ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:0,heldWeapon:p.weapon,sprint:0,guard:0,scopeKick:0});$('coin-gain').textContent='';$('combat-feed').textContent='';
 }
 async function startTraining(kind){
   if(connecting)return;connecting=true;unlockAudio();
@@ -226,8 +226,11 @@ function hud(dt){
   $('connection').textContent=state.mode==='freeplay'||state.mode==='training'?'LOCAL PRACTICE / NO COIN REWARDS':state.mode==='solo'?`${settings.difficulty.toUpperCase()} / VS. ECHO`:`ROOM ${net.code} / ${net.transport.toUpperCase()}`;$('ping').textContent=state.hosted?`${net.ping} MS`:state.mode==='freeplay'||state.mode==='training'?'LOCAL':'OFFLINE';$('fps').textContent=`${fps} FPS`;
   $('round-banner').hidden=m.phase==='live';if(m.phase==='countdown'){$('banner-kicker').textContent=`ROUND ${m.round} / GET READY`;$('banner-title').textContent=Math.max(1,Math.ceil(m.clock));$('banner-note').textContent='First to five. Make it count.';}
   if(m.phase==='intermission'){$('banner-kicker').textContent='ROUND COMPLETE';$('banner-title').textContent=!m.roundWinner?'DRAW':m.roundWinner===state.you?'ROUND WON':'ROUND LOST';$('banner-note').textContent=`Next round in ${Math.ceil(m.clock)} · Stay quick.`;}
+  if(fx.heldWeapon!==p.weapon){fx.heldWeapon=p.weapon;fx.equipAge=0;fx.scopeKick=0;}
+  fx.equipAge+=dt;fx.sprint=mix(fx.sprint,speed>10&&p.ground&&!input.ads?1:0,1-Math.exp(-10*dt));fx.guard=mix(fx.guard,p.parry>0?1:0,1-Math.exp(-22*dt));
   fx.shotAge+=dt;fx.ads=mix(fx.ads,input.ads&&!isMelee(p.weapon)?1:0,1-Math.exp(-16*dt));fx.recoil=Math.max(0,fx.recoil-dt*6);fx.muzzle=Math.max(0,fx.muzzle-dt);fx.hit=Math.max(0,fx.hit-dt);fx.damage=Math.max(0,fx.damage-dt*1.3);fx.sway*=Math.exp(-10*dt);
-  const scoped=p.weapon===2&&fx.ads>.8;crosshair.update({speed,recoil:fx.recoil,ads:fx.ads,alive:p.hp>0,scoped});$('hitmarker').style.opacity=fx.hit>0?'1':'0';$('damage-vignette').style.opacity=fx.damage;$('scope').hidden=!scoped;
+  const scope=sniperScope({weapon:p.weapon,ads:fx.ads,age:fx.shotWeapon===2?fx.shotAge:10,cooldown:p.cooldown,reload:p.reload,ammo:p.ammo[2],reduced:settings.reduced});paintSniperScope($('scope'),scope);fx.scopeKick=scope.visible?scope.kick:0;
+  crosshair.update({speed,recoil:fx.recoil,ads:fx.ads,alive:p.hp>0,scoped:scope.visible});$('hitmarker').style.opacity=fx.hit>0?'1':'0';$('damage-vignette').style.opacity=fx.damage;
 }
 function frame(now){
   const dt=Math.min(.075,(now-last)/1000);last=now;time+=dt;accumulator+=dt;while(accumulator>=TICK){tick();accumulator-=TICK;}
@@ -235,7 +238,7 @@ function frame(now){
   if(playing&&p){
     hud(dt);const bob=settings.reduced?0:Math.sin(time*12)*Math.min(Math.hypot(p.v[0],p.v[2])*.002,.024)*(p.ground?1:0)*(1-fx.ads);
     camera={pos:[p.p[0],p.p[1]+eyeHeight(p)+bob,p.p[2]],yaw:input.yaw,pitch:input.pitch};fov=mix(settings.fov,WEAPONS[p.weapon].ads,fx.ads);
-    if(!settings.reduced)fov+=Math.min(9,Math.max(0,Math.hypot(p.v[0],p.v[2])-10)*.6)*(1-fx.ads);
+    if(!settings.reduced)fov+=Math.min(9,Math.max(0,Math.hypot(p.v[0],p.v[2])-10)*.6)*(1-fx.ads)+fx.scopeKick*1.8;
     players=state.match.players.map(other=>{if(other.id===state.you)return p;if(!state.hosted)return other;let remote=state.remote.get(other.id);if(!remote){remote=structuredClone(other);state.remote.set(other.id,remote);}const old=[...remote.p];Object.assign(remote,other);remote.p=old.map((v,i)=>mix(v,other.p[i],1-Math.exp(-18*dt)));return remote;});
   }else{
     const a=.68+(settings.reduced?0:Math.sin(time*.055)*.1);camera={pos:[Math.sin(a)*43,23,Math.cos(a)*43],yaw:-a,pitch:-.47};fov=58;
