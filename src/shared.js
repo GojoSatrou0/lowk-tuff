@@ -1,6 +1,7 @@
 // Shared deterministic rules: the browser predicts movement; the server owns combat.
 export const TICK = 1 / 60;
 export const MOVEMENT = Object.freeze({maxSpeed:32,redline:16,clashWindow:.12,clashMargin:1,clashStun:.75});
+export const GRAPPLE = Object.freeze({range:30,duration:1.8,cooldown:2.5,pull:48});
 export const horizontalSpeed = p => Math.hypot(p.v[0],p.v[2]);
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 export const mix = (a, b, t) => a + (b - a) * t;
@@ -55,20 +56,40 @@ export function floorAt(map, x, z, ceiling = Infinity) {
   return floor;
 }
 export function createPlayer(id, name, slot = 0) {
-  return { id, name: String(name || 'Runner').slice(0,18), slot, p: [0,0,0], v:[0,0,0], yaw:0,pitch:0,hp:100,score:0,ready:false,weapon:0,loadout:[...DEFAULT_LOADOUT],ammo:WEAPONS.map(w=>w.ammo),reload:0,cooldown:0,burstLeft:0,charge:0,spin:0,parry:0,abilityCD:0,dash:0,stun:0,swing:null,ground:true,coyote:.1,jumps:0,slide:0,slideCD:0,crouch:false,ads:false,lastJump:0,lastSlide:0,lastFire:0,lastAlt:0,altHeld:false,trigger:false,shots:0,ack:0 };
+  return { id, name: String(name || 'Runner').slice(0,18), slot, p: [0,0,0], v:[0,0,0], yaw:0,pitch:0,hp:100,score:0,ready:false,weapon:0,loadout:[...DEFAULT_LOADOUT],ammo:WEAPONS.map(w=>w.ammo),reload:0,cooldown:0,burstLeft:0,charge:0,spin:0,parry:0,abilityCD:0,dash:0,stun:0,swing:null,grapple:null,grappleCD:0,lastGrapple:0,ground:true,coyote:.1,jumps:0,slide:0,slideCD:0,crouch:false,ads:false,lastJump:0,lastSlide:0,lastFire:0,lastAlt:0,altHeld:false,trigger:false,shots:0,ack:0 };
 }
 export function resetPlayer(p, map) {
-  p.stun=0;p.swing=null;
+  p.stun=0;p.swing=null;p.grapple=null;p.grappleCD=0;p.lastGrapple=0;
   p.p=[...map.spawns[p.slot]];p.v=[0,0,0];p.yaw=p.slot===0?0:Math.PI;p.pitch=0;p.hp=100;p.ammo=WEAPONS.map(w=>w.ammo);p.weapon=p.loadout.includes(p.weapon)?p.weapon:p.loadout[0];p.reload=0;p.cooldown=.25;p.burstLeft=0;p.charge=0;p.spin=0;p.parry=0;p.abilityCD=0;p.dash=0;p.altHeld=false;p.slide=0;p.slideCD=0;p.ground=true;p.jumps=0;p.coyote=.1;p.trigger=false;p.crouch=false;
 }
 export function cleanInput(v = {}) {
   const num=(n,a,b,def=0)=>typeof n==='number'&&Number.isFinite(n)?clamp(n,a,b):def;
-  return { seq:Math.floor(num(v.seq,0,1e9)), x:num(v.x,-1,1),z:num(v.z,-1,1),yaw:num(v.yaw,-1e6,1e6),pitch:num(v.pitch,-1.48,1.48),jump:Math.floor(num(v.jump,0,1e9)),slide:Math.floor(num(v.slide,0,1e9)),fireId:Math.floor(num(v.fireId,0,1e9)),altId:Math.floor(num(v.altId,0,1e9)),sprint:v.sprint===true,crouch:v.crouch===true,ads:v.ads===true,fire:v.fire===true,reload:v.reload===true,paused:v.paused===true,weapon:Math.floor(num(v.weapon,0,WEAPONS.length-1)) };
+  return { seq:Math.floor(num(v.seq,0,1e9)), x:num(v.x,-1,1),z:num(v.z,-1,1),yaw:num(v.yaw,-1e6,1e6),pitch:num(v.pitch,-1.48,1.48),jump:Math.floor(num(v.jump,0,1e9)),slide:Math.floor(num(v.slide,0,1e9)),fireId:Math.floor(num(v.fireId,0,1e9)),altId:Math.floor(num(v.altId,0,1e9)),grappleId:Math.floor(num(v.grappleId,0,1e9)),grapple:v.grapple===true,sprint:v.sprint===true,crouch:v.crouch===true,ads:v.ads===true,fire:v.fire===true,reload:v.reload===true,paused:v.paused===true,weapon:Math.floor(num(v.weapon,0,WEAPONS.length-1)) };
+}
+export function releaseGrapple(p){if(p.grapple){p.grapple=null;p.grappleCD=GRAPPLE.cooldown;}}
+function updateGrapple(p,input,map,dt,stunned){
+  p.grappleCD=Math.max(0,(p.grappleCD||0)-dt);
+  const pressed=input.grappleId>(p.lastGrapple||0);p.lastGrapple=Math.max(p.lastGrapple||0,input.grappleId||0);
+  if(!input.grapple||stunned||p.hp<=0){releaseGrapple(p);return;}
+  const origin=[p.p[0],p.p[1]+eyeHeight(p),p.p[2]];
+  if(pressed&&!p.grapple&&p.grappleCD<=0){
+    const dir=forward(input.yaw,input.pitch),distance=rayWorld(origin,dir,map,GRAPPLE.range);
+    // Anchors come only from a server ray against solid map geometry.
+    if(distance>2&&distance<GRAPPLE.range-.001){
+      p.grapple={anchor:origin.map((v,i)=>v+dir[i]*distance),remaining:GRAPPLE.duration};p.slide=0;p.dash=0;
+      if(p.grapple.anchor[1]>p.p[1]+.7){p.v[1]=Math.max(p.v[1],3.5);p.ground=false;}
+    }else p.grappleCD=.25;
+  }
+  if(p.grapple){const delta=p.grapple.anchor.map((v,i)=>v-origin[i]),distance=length(delta);
+    p.grapple.remaining-=dt;
+    if(distance<1.6||distance>GRAPPLE.range+8||p.grapple.remaining<=0||rayWorld(origin,norm(delta),map,distance)<distance-.15)releaseGrapple(p);
+  }
 }
 export function movePlayer(p, input, map, dt) {
   const stunned=p.stun>0;p.stun=Math.max(0,(p.stun||0)-dt);
   if(stunned)input={...input,x:0,z:0,ads:false,sprint:false,crouch:false};
   p.yaw=input.yaw;p.pitch=input.pitch;p.ads=input.ads&&!isMelee(p.weapon);
+  updateGrapple(p,input,map,dt,stunned);
   const jump=!stunned&&input.jump>p.lastJump, slide=!stunned&&input.slide>p.lastSlide;
   p.lastJump=Math.max(p.lastJump,input.jump);p.lastSlide=Math.max(p.lastSlide,input.slide);p.slideCD=Math.max(0,p.slideCD-dt);
   p.coyote=p.ground?.1:Math.max(0,p.coyote-dt);
@@ -89,7 +110,7 @@ export function movePlayer(p, input, map, dt) {
   else if(p.slide>0){p.slide=Math.max(0,p.slide-dt);const drag=Math.exp(-.45*dt);p.v[0]*=drag;p.v[2]*=drag;}
   else {
     const max=(p.ads?4.8:p.crouch?4:input.sprint?(WEAPONS[p.weapon].sprint||(isMelee(p.weapon)?13:11.3)):8)*(WEAPONS[p.weapon].moveScale||1);
-    if(p.ground||p.ads){
+    if((p.ground||p.ads)&&!p.grapple){
       const aligned=il>0&&(p.v[0]*dx+p.v[2]*dz)>speed*.8;
       const acc=p.ads?14:speed>max&&aligned?2.2:14,blend=1-Math.exp(-acc*dt);
       p.v[0]=mix(p.v[0],dx*max,blend);p.v[2]=mix(p.v[2],dz*max,blend);
@@ -102,8 +123,9 @@ export function movePlayer(p, input, map, dt) {
       p.v[2]=(p.v[2]+(wish?dz/wish*add:0))*Math.exp(-.08*dt);
     }
   }
+  if(p.grapple){const dir=norm(p.grapple.anchor.map((v,i)=>v-p.p[i]-(i===1?eyeHeight(p):0)));for(let i=0;i<3;i++)p.v[i]+=dir[i]*GRAPPLE.pull*dt;p.v[1]=clamp(p.v[1],-24,24);}
   const cap=horizontalSpeed(p);if(cap>MOVEMENT.maxSpeed){p.v[0]*=MOVEMENT.maxSpeed/cap;p.v[2]*=MOVEMENT.maxSpeed/cap;}
-  const oldY=p.p[1];p.v[1]-=25*dt;
+  const oldY=p.p[1];p.v[1]-=25*dt*(p.grapple?.35:1);
   // Substeps keep fast slides and knockbacks from tunneling through thin cover.
   const steps=Math.max(1,Math.ceil(horizontalSpeed(p)*dt/.25));
   for(let step=0;step<steps;step++){
@@ -179,8 +201,8 @@ export function resolveMelee(m,map,dt){
     const position=a.p.map((v,k)=>(v+b.p[k])/2+(k===1?1.25:0));
     for(const p of [a,b]){p.swing=null;p.parry=0;p.burstLeft=0;p.charge=0;p.spin=0;p.dash=0;p.slide=0;}
     const repel=(p,other,power)=>{const dx=p.p[0]-other.p[0],dz=p.p[2]-other.p[2],len=Math.hypot(dx,dz)||1;p.v[0]=dx/len*power;p.v[2]=dz/len*power;};
-    if(winner){loser.stun=MOVEMENT.clashStun;loser.cooldown=Math.max(loser.cooldown,loser.stun);repel(loser,winner,8);winner.cooldown=Math.min(winner.cooldown,.18);}
-    else{for(const p of [a,b]){p.stun=.18;p.cooldown=Math.max(p.cooldown,.25);}repel(a,b,4);repel(b,a,4);}
+    if(winner){loser.stun=MOVEMENT.clashStun;releaseGrapple(loser);loser.cooldown=Math.max(loser.cooldown,loser.stun);repel(loser,winner,8);winner.cooldown=Math.min(winner.cooldown,.18);}
+    else{for(const p of [a,b]){p.stun=.18;releaseGrapple(p);p.cooldown=Math.max(p.cooldown,.25);}repel(a,b,4);repel(b,a,4);}
     emit(m,'clash',{players:[a.id,b.id],speeds,winner:winner?.id||null,loser:loser?.id||null,position});
   }
   for(const p of m.players){if(!p.swing)continue;
@@ -197,7 +219,7 @@ export function damagePlayer(m,target,attacker,weapon,amount,head,position){
   if(target.parry>0&&WEAPONS[target.weapon].parry&&!isMelee(weapon)&&w.projectile!=='rocket'){
     emit(m,'parry',{player:target.id,attacker,weapon,position,blocked:amount});return false;
   }
-  target.hp=Math.max(0,target.hp-amount);emit(m,'hit',{player:attacker,target:target.id,damage:amount,head,position});return true;
+  target.hp=Math.max(0,target.hp-amount);if(target.hp<=0)releaseGrapple(target);emit(m,'hit',{player:attacker,target:target.id,damage:amount,head,position});return true;
 }
 export function stepMatch(m,inputs,dt=TICK){
   m.time+=dt;if(m.phase==='waiting'||m.phase==='finished')return;

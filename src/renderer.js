@@ -262,6 +262,7 @@ function render({map,camera,players=[],local=null,fx={},time=0,tracers=[],flames
   for(const o of batches)draw(o.shape,o.m,o.c,o.unlit);
   for(const id of remoteFire.keys())if(!players.some(p=>p.id===id))remoteFire.delete(id);for(const p of players)if(!local||p.id!==local.id)avatar(p,time);
   for(const t of tracers){draw('cyl',m4SegmentY(t.a,t.b,.015),t.color||'#ffe1a1',1);draw('sphere',m4TRS(t.b,[0,0,0],[.055,.055,.055]),'#fff5df',1);}
+  for(const p of players)if(p.grapple){const a=[p.p[0]-Math.cos(p.yaw)*.28,p.p[1]+eyeHeight(p)-.3,p.p[2]-Math.sin(p.yaw)*.28],b=p.grapple.anchor;draw('cyl',m4SegmentY(a,b,.025),'#9ad4ff',1);draw('sphere',m4TRS(b,[],[.12,.12,.12]),'#d6f4ff',1);}
   for(const p of players)if(p.stun>0&&p.id!==local?.id)for(let n=0;n<3;n++){const a=n*Math.PI*2/3+(fx.reduced?0:time*4);draw('sphere',m4TRS([p.p[0]+Math.cos(a)*.34,p.p[1]+2.1,p.p[2]+Math.sin(a)*.34],[],[.065,.065,.065]),'#ffcf88',1);}
   for(const c of casings)draw('cyl',m4TRS(c.p,[c.spin,.3,c.spin*.7],[c.shell?.065:.025,c.shell?.14:.09,c.shell?.065:.025]),c.shell?'#ca7352':'#e5bd68');
   for(const q of projectiles){const d=V3.norm(q.v),tail=q.p.map((v,i)=>v-d[i]*(q.kind==='rocket'?.6:.9));draw('cyl',m4SegmentY(tail,q.p,q.kind==='rocket'?.12:.018),WEAPONS[q.weapon].color,1);if(q.kind==='rocket')draw('sphere',m4TRS(tail,[],[.18,.18,.18]),'#fff6b0',1);}
