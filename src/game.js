@@ -3,6 +3,7 @@ import {createTraining,stepTraining,resetTraining,toggleTrainingPace} from './tr
 import { createRenderer } from './renderer.js';
 import { ArenaNetwork } from './network.js';
 import { createBot,botInput } from './bot.js';
+import {createAdminPanel} from './admin-panel.js';
 import { createShop } from './shop.js';
 import { createAccounts } from './accounts.js';
 import { createCrosshair } from './crosshair.js';
@@ -16,7 +17,7 @@ for(const [key,min,max]of [['sensitivity',.2,2],['ads',.2,1],['fov',70,110],['vo
 const save=()=>{try{localStorage.setItem('velocity-settings',JSON.stringify(settings));}catch{}};
 const state={mode:'menu',map:MAPS[0],match:null,you:'you',local:null,paused:false,hosted:false,matchCoins:0,bot:createBot(),event:0,phase:'',round:0,remote:new Map(),seq:0};
 const input={x:0,z:0,yaw:0,pitch:0,jump:0,slide:0,weapon:0,fire:false,fireId:0,altId:0,grapple:false,grappleId:0,ads:false,reload:false,sprint:false,crouch:false,seq:0};
-const keys=new Set(),fx={ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:10,heldWeapon:-1,sprint:0,guard:0,scopeKick:0},tracers=[],explosions=[],flames=[],casings=[];
+const keys=new Set(),fx={ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:10,heldWeapon:-1,sprint:0,guard:0,scopeKick:0},tracers=[],explosions=[],flames=[],casings=[],confetti=[];
 let renderer,audio=null,toastTimer,feedTimer,lastHP=100,fps=60,frameCount=0,fpsTime=performance.now(),last=performance.now(),accumulator=0,time=0,menuView='play',freeLook=false,connecting=false;
 try{renderer=createRenderer(canvas);}catch(e){$('fatal').hidden=false;$('fatal-message').textContent=e.message;throw e;}
 
@@ -73,7 +74,7 @@ function sound(kind,weapon=0){
 }
 function unlockAudio(){try{audio??=new AudioContext();audio.resume().catch(()=>{});}catch{}}
 function clearInput(){keys.clear();input.x=input.z=0;input.fire=input.ads=input.reload=input.sprint=input.crouch=input.grapple=false;}
-function controlsActive(){return active()&&!state.paused&&!$('settings').open&&!$('crosshair-settings').open&&(document.pointerLockElement===canvas||freeLook);}
+function controlsActive(){return active()&&!state.paused&&!$('settings').open&&!$('crosshair-settings').open&&!$('admin-dialog').open&&(document.pointerLockElement===canvas||freeLook);}
 async function lock(){unlockAudio();$('pause').hidden=true;state.paused=false;if(freeLook){$('capture-fallback').hidden=true;canvas.focus();return;}try{await canvas.requestPointerLock(settings.raw?{unadjustedMovement:true}:undefined);}catch{try{await canvas.requestPointerLock();}catch{state.paused=true;$('pause').hidden=false;$('capture-fallback').hidden=false;toast('Mouse capture is unavailable here. Use the fallback button or open in Chrome / Edge.');}}}
 function active(){return state.mode!=='menu'&&state.match&&state.match.phase!=='waiting'&&state.match.phase!=='finished';}
 function setView(view){menuView=view;$('play-view').hidden=view!=='play';$('armory-view').hidden=view!=='armory';document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view));if(view==='armory')shop.render();$('menu').scrollTop=0;}
@@ -81,7 +82,7 @@ function pauseNote(){return state.mode==='training'?'Drill paused. Retry resets 
 function setGameUI(){const playing=active(),free=state.mode==='freeplay',training=state.mode==='training';$('menu').hidden=playing||state.match?.phase==='finished';$('hud').hidden=!playing;$('hud-map').textContent=state.map.name.toUpperCase();$('match-score').hidden=free||training;$('freeplay-status').hidden=!free;$('training-status').hidden=!training;$('hud').classList.toggle('in-training',training);$('freeplay-reset').hidden=!(free||training);$('freeplay-reset').textContent=training?'RETRY DRILL ↻':'RESET POSITION & AMMO ↻';$('leave').textContent=training?'LEAVE PRACTICE':free?'LEAVE FREE PLAY':'LEAVE MATCH';$('pause-note').textContent=pauseNote();document.querySelector('.hud-wallet').hidden=free||training;}
 function syncFreePlayPlayer(){
   const p=state.local;clearInput();input.yaw=p.yaw;input.pitch=p.pitch;input.weapon=p.weapon;input.jump=p.lastJump;input.slide=p.lastSlide;input.fireId=p.lastFire;input.altId=p.lastAlt;input.grappleId=p.lastGrapple||0;
-  lastHP=100;tracers.length=flames.length=explosions.length=casings.length=0;Object.assign(fx,{ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:0,heldWeapon:p.weapon,sprint:0,guard:0,scopeKick:0});$('coin-gain').textContent='';$('combat-feed').textContent='';
+  lastHP=100;tracers.length=flames.length=explosions.length=casings.length=confetti.length=0;Object.assign(fx,{ads:0,recoil:0,muzzle:0,hit:0,damage:0,sway:0,shotAge:10,shotWeapon:-1,clash:0,equipAge:0,heldWeapon:p.weapon,sprint:0,guard:0,scopeKick:0});$('coin-gain').textContent='';$('combat-feed').textContent='';
 }
 async function startTraining(kind){
   if(connecting)return;connecting=true;unlockAudio();
@@ -114,7 +115,7 @@ async function beginSolo(){
   const p=createPlayer('you',settings.name,0),bot=createPlayer('bot','ECHO',1);p.loadout=[...shop.profile.loadout];p.weapon=p.loadout[0];state.match.players=[p,bot];readyPlayer(state.match,p);readyPlayer(state.match,bot);state.local=p;state.paused=false;state.remote.clear();input.yaw=p.yaw;input.pitch=p.pitch;input.jump=input.slide=0;input.weapon=p.weapon;lastHP=100;
   $('results').hidden=$('lobby').hidden=true;setGameUI();phaseUI();lock();
 }
-function leave(){const leaving=net.close();clearInput();state.mode='menu';state.match=null;state.local=null;state.event=0;state.phase='';state.remote.clear();$('results').hidden=$('pause').hidden=$('lobby').hidden=$('capture-fallback').hidden=true;$('menu').hidden=false;$('hud').hidden=true;$('room-detail').hidden=true;document.querySelector('.lobby-actions').hidden=false;document.exitPointerLock?.();updateBelt(shop.profile);setView('play');return leaving;}
+function leave(){const leaving=net.close();clearInput();state.mode='menu';state.match=null;state.local=null;state.event=0;state.phase='';state.remote.clear();$('results').hidden=$('pause').hidden=$('lobby').hidden=$('capture-fallback').hidden=true;$('menu').hidden=false;$('hud').hidden=true;$('room-detail').hidden=true;document.querySelector('.lobby-actions').hidden=false;document.exitPointerLock?.();updateBelt(shop.profile);setView('play');adminPanel.render();return leaving;}
 function phaseUI(){
   const m=state.match;if(!m)return;
   if(m.phase!==state.phase||m.round!==state.round){
@@ -164,6 +165,11 @@ function events(m){
       for(let n=0;n<10;n++){const angle=n*Math.PI/5;tracers.push({a:event.position,b:[event.position[0]+Math.cos(angle)*.8,event.position[1]+Math.sin(angle)*.8,event.position[2]+Math.sin(angle*2)*.3],life:settings.reduced?.06:.16,color:'#ffe6b4'});}
     }
     if(event.type==='dash'&&event.player===state.you){sound('guard');feed('RIFT DASH');}
+    if(event.type==='adminToy'){
+      feed('ADMIN · '+event.label+(event.enabled?'':' OFF'));
+      for(const origin of event.positions||[])for(let n=0;n<32;n++){const angle=n*2.4;confetti.push({p:[...origin],v:[Math.cos(angle)*(2+n%3),2+n%5,Math.sin(angle)*(2+n%3)],life:2.3,color:['#ff9970','#b99eff','#8ff3d6','#ffe28a'][n%4],spin:n});}
+      if(confetti.length>128)confetti.splice(0,confetti.length-128);
+    }
     if(event.type==='disconnect')toast('Your rival left the room. Waiting for another player.');
   }
 }
@@ -174,11 +180,12 @@ function onSnapshot(s){
   else{
     const predicted=state.local,predPos=[...predicted.p],predV=[...predicted.v],error=Math.hypot(...auth.p.map((v,i)=>v-predPos[i])),hadGrapple=!!predicted.grapple;
     Object.assign(predicted,structuredClone(auth));
-    const blastImpulse=auth.stun>0||!!auth.grapple!==hadGrapple||s.events?.some(e=>e.id>state.event&&((e.type==='hit'&&e.target===s.you)||(e.type==='dash'&&e.player===s.you)||(e.type==='clash'&&e.players.includes(s.you))));
+    const blastImpulse=auth.stun>0||!!auth.grapple!==hadGrapple||s.events?.some(e=>e.id>state.event&&((e.type==='hit'&&e.target===s.you)||(e.type==='dash'&&e.player===s.you)||(e.type==='clash'&&e.players.includes(s.you))||(e.type==='adminToy'&&e.players.includes(s.you))));
     if(s.phase==='live'&&error<3){predicted.p=predPos.map((v,i)=>mix(v,auth.p[i],error>.12?.38:0));if(!blastImpulse)predicted.v=predV;}
   }
-  state.match=s;events(s);phaseUI();
+  state.match=s;events(s);phaseUI();adminPanel.render();
   if(s.phase==='waiting'){
+    if(s.playground?.used)setLobbyStatus('ADMIN PLAYGROUND · Coin rewards are disabled in this room.');
     $('share-code').textContent=s.room;$('room-detail').hidden=false;document.querySelector('.lobby-actions').hidden=true;
     const list=$('lobby-players');list.replaceChildren();
     for(const p of s.players){const row=document.createElement('div');row.className='lobby-player';const name=document.createElement('strong');name.textContent=p.name+(p.id===s.you?' (YOU)':'');const status=document.createElement('span');status.textContent=p.ready?'READY':'GETTING READY';row.append(name,status);list.append(row);}
@@ -187,6 +194,7 @@ function onSnapshot(s){
   }
 }
 const net=new ArenaNetwork(onSnapshot,(message,fatal=false)=>{toast(message);if(fatal){leave();$('lobby').hidden=false;setLobbyStatus(message,true);}});
+const adminPanel=createAdminPanel({getUser:()=>shop.user,getMatch:()=>state.match,notify:toast,onOpen:()=>{clearInput();if(active()){state.paused=true;$('pause').hidden=false;}document.exitPointerLock?.();},send:async(command,target)=>{const s=await net.request({action:'admin',command,target});onSnapshot(s);}});
 function setLobbyStatus(message,error=false){$('lobby-status').textContent=message;$('lobby-status').classList.toggle('error',error);}
 function packedInput(){input.seq=++state.seq;return {...input,paused:state.mode==='solo'&&(state.paused||document.hidden)};}
 async function connectRoom(action){
@@ -213,7 +221,7 @@ function tick(){
   }else if(state.mode==='solo'&&!state.hosted){
     if(state.paused)return;const p=state.local,bot=state.match.players.find(p=>p.id==='bot');
     const botControl=botInput(state.bot,bot,p,state.match,TICK,settings.difficulty);stepMatch(state.match,{you:cleanInput(packedInput()),bot:botControl});events(state.match);phaseUI();
-  }else if(state.match.phase==='live'&&!(state.mode==='solo'&&state.paused)&&performance.now()-net.lastReceive<1500){movePlayer(state.local,cleanInput(input),state.map,TICK);}
+  }else if(state.match.phase==='live'&&!(state.mode==='solo'&&state.paused)&&performance.now()-net.lastReceive<1500){movePlayer(state.local,cleanInput(input),state.map,TICK,state.match.playground);}
 }
 function hud(dt){
   const m=state.match,p=state.local;if(!m||!p)return;const other=m.players.find(p=>p.id!==state.you),w=WEAPONS[p.weapon];
@@ -254,9 +262,10 @@ function frame(now){
   }
   for(let i=tracers.length-1;i>=0;i--){tracers[i].life-=dt;if(tracers[i].life<=0)tracers.splice(i,1);}
   for(let i=casings.length-1;i>=0;i--){const c=casings[i];c.life-=dt;c.v[1]-=9*dt;for(let j=0;j<3;j++)c.p[j]+=c.v[j]*dt;c.spin+=dt*16;if(c.life<=0)casings.splice(i,1);}
+  for(let i=confetti.length-1;i>=0;i--){const c=confetti[i];c.life-=dt;c.v[1]-=6*dt;for(let j=0;j<3;j++)c.p[j]+=c.v[j]*dt;c.spin+=dt*4;if(c.life<=0)confetti.splice(i,1);}
   for(let i=flames.length-1;i>=0;i--){flames[i].life-=dt;if(flames[i].life<=0)flames.splice(i,1);}
   for(let i=explosions.length-1;i>=0;i--){explosions[i].life-=dt;if(explosions[i].life<=0)explosions.splice(i,1);}
-  renderer.render({map:state.map,camera,players,local:playing?p:null,fx:settings.reduced?{...fx,recoil:0,sway:0,shotAge:p?.weapon===4?fx.shotAge:10,reduced:true}:fx,time,tracers,flames,casings,projectiles:playing?state.match.projectiles||[]:[],hazards:playing?state.match.hazards||[]:[],explosions,menu:!playing,fov,quality:settings.quality});
+  renderer.render({map:state.map,camera,players,local:playing?p:null,fx:settings.reduced?{...fx,recoil:0,sway:0,shotAge:p?.weapon===4?fx.shotAge:10,reduced:true}:fx,time,tracers,flames,casings,confetti,playground:playing?state.match.playground:null,projectiles:playing?state.match.projectiles||[]:[],hazards:playing?state.match.hazards||[]:[],explosions,menu:!playing,fov,quality:settings.quality});
   frameCount++;if(now-fpsTime>=1000){fps=Math.round(frameCount*1000/(now-fpsTime));frameCount=0;fpsTime=now;}
   requestAnimationFrame(frame);
 }

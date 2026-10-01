@@ -170,7 +170,7 @@ function throwableModel(base,id,time=0){
     part('cube',[.012,.29,0],[.038,.09,.03],'#f4d6a1',[0,0,-.3]);part('cone',[.035,.385,0],[.065,.15+Math.sin(time*21)*.024,.06],'#ff8b43',[0,0,-.15],1);part('sphere',[.025,.33,0],[.035,.06,.035],'#ffe89c',[],1);
   }
 }
-function avatar(p,time,reduced=false){
+function avatar(p,time,reduced=false,bigHeads=false){
   if(p.hp<=0)return;let shot=remoteFire.get(p.id);if(!shot){shot={shots:p.shots,at:-10};remoteFire.set(p.id,shot);}if(shot.shots!==p.shots){shot.at=p.shots>shot.shots?time:-10;shot.shots=p.shots;}const kick=isMelee(p.weapon)?Math.sin(Math.min(1,(time-shot.at)/.38)*Math.PI)*(reduced?.4:1):weaponMotion(p.weapon,time-shot.at,{shots:p.shots,reduced}).kick,flash=time-shot.at<.065;
   const crouch=p.crouch||p.slide>0,height=crouch?1.12:1.8,speed=Math.hypot(p.v?.[0]||0,p.v?.[2]||0),stride=Math.sin(time*12)*Math.min(speed*.028,.21),base=m4TRS(p.p,[0,p.yaw,0],[1,1,1]);
   const accent=p.slot===0?'#8de1d5':'#ff8662',armor=p.slot===0?'#e3ece6':'#3c4856';
@@ -178,8 +178,8 @@ function avatar(p,time,reduced=false){
   shadow(p.p,1.6);
   part('cube',[0,height*.57,0],[.68,height*.36,.4],armor);
   part('cube',[0,height*.6,-.225],[.52,.18,.05],accent,[0,0,0],.5);
-  part('sphere',[0,height-.2,0],[.52,.52,.5],armor);
-  part('cube',[0,height-.17,-.233],[.39,.12,.06],accent,[0,0,0],1);
+  part('sphere',[0,height-.2,0],bigHeads?[1.05,1.05,1.02]:[.52,.52,.5],armor);
+  part('cube',[0,height-.17,bigHeads?-.49:-.233],bigHeads?[.8,.24,.06]:[.39,.12,.06],accent,[0,0,0],1);
   part('cube',[0,height*.38,0],[.53,.18,.32],'#253541');
   for(const s of [-1,1]){
     part('cube',[s*.19,height*.18,s*stride],[.23,height*.37,.25],'#354854',[s*stride,0,0]);
@@ -304,7 +304,7 @@ function firstPerson(p,camera,fx,time){
   if(fx.muzzle>0){const z=long?-.99:-.78,size=Math.max(.2,fx.muzzle/.065);part('sphere',[0,.005,z],[.08*size,.08*size,.19*size],'#fff9d2',[],1);if(!fx.reduced){part('cube',[0,.005,z],[.26*size,.025,.025],'#ffc773',[0,0,p.shots*1.7],1);part('cube',[0,.005,z],[.025,.22*size,.025],'#ffe6a5',[0,0,p.shots*1.7],1);}}
   function drawLocalLine(a,b,r,c){draw('cyl',m4Mul(base,m4SegmentY(a,b,r)),c,1);}
 }
-function render({map,camera,players=[],local=null,fx={},time=0,tracers=[],flames=[],casings=[],projectiles=[],hazards=[],explosions=[],menu=false,fov=82,quality=1}){
+function render({map,camera,players=[],local=null,fx={},time=0,tracers=[],flames=[],casings=[],projectiles=[],hazards=[],confetti=[],playground=null,explosions=[],menu=false,fov=82,quality=1}){
   if(current?.id!==map.id)build(map);
   const scale=Math.min(window.devicePixelRatio||1,quality===2?1.75:quality===0?.8:1.25),w=Math.round(canvas.clientWidth*scale),h=Math.round(canvas.clientHeight*scale);
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
@@ -312,10 +312,11 @@ function render({map,camera,players=[],local=null,fx={},time=0,tracers=[],flames
   const dir=forward(camera.yaw,camera.pitch);gl.uniformMatrix4fv(U.view,false,m4LookAt(camera.pos,V3.add(camera.pos,dir),[0,1,0]));gl.uniformMatrix4fv(U.projection,false,m4Perspective(fov*Math.PI/180,w/h,.035,260));gl.uniform3fv(U.eye,camera.pos);gl.uniform3fv(U.fog,color(map.sky).slice(0,3));gl.uniform1f(U.night,map.id==='skyline'?1:0);
   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowDepth);gl.uniform1i(U.shadowMap,0);gl.uniform1f(U.hasShadow,shadowReady&&quality>0?1:0);gl.uniformMatrix4fv(U.lightVP,false,lightVP);
   for(const o of batches)draw(o.shape,o.m,o.c,o.unlit);
-  for(const id of remoteFire.keys())if(!players.some(p=>p.id===id))remoteFire.delete(id);for(const p of players)if(!local||p.id!==local.id)avatar(p,time,fx.reduced);
+  for(const id of remoteFire.keys())if(!players.some(p=>p.id===id))remoteFire.delete(id);for(const p of players)if(!local||p.id!==local.id)avatar(p,time,fx.reduced,playground?.bigHeads);
   for(const t of tracers){draw('cyl',m4SegmentY(t.a,t.b,.015),t.color||'#ffe1a1',1);draw('sphere',m4TRS(t.b,[0,0,0],[.055,.055,.055]),'#fff5df',1);}
   for(const p of players)if(p.grapple){const a=[p.p[0]-Math.cos(p.yaw)*.28,p.p[1]+eyeHeight(p)-.3,p.p[2]-Math.sin(p.yaw)*.28],b=p.grapple.anchor;draw('cyl',m4SegmentY(a,b,.025),'#9ad4ff',1);draw('sphere',m4TRS(b,[],[.12,.12,.12]),'#d6f4ff',1);}
   for(const p of players)if(p.stun>0&&p.id!==local?.id)for(let n=0;n<3;n++){const a=n*Math.PI*2/3+(fx.reduced?0:time*4);draw('sphere',m4TRS([p.p[0]+Math.cos(a)*.34,p.p[1]+2.1,p.p[2]+Math.sin(a)*.34],[],[.065,.065,.065]),'#ffcf88',1);}
+  for(const c of confetti)draw('cube',m4TRS(c.p,fx.reduced?[]:[c.spin,c.spin*.4,0],[.06,.12,.012]),c.color,1);
   for(const c of casings)draw('cyl',m4TRS(c.p,[c.spin,.3,c.spin*.7],[c.shell?.065:.025,c.shell?.14:.09,c.shell?.065:.025]),c.shell?'#ca7352':'#e5bd68');
   for(const q of projectiles){if(WEAPONS[q.weapon].throwable){throwableModel(m4TRS(q.p,fx.reduced?[]:[q.life*8,0,q.life*3],[1.2,1.2,1.2]),q.weapon,fx.reduced?0:time);continue;}const d=V3.norm(q.v),tail=q.p.map((v,i)=>v-d[i]*(q.kind==='rocket'?.6:.9));draw('cyl',m4SegmentY(tail,q.p,q.kind==='rocket'?.12:.018),WEAPONS[q.weapon].color,1);if(q.kind==='rocket')draw('sphere',m4TRS(tail,[],[.18,.18,.18]),'#fff6b0',1);}
   gl.depthMask(false);

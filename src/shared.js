@@ -102,7 +102,7 @@ function updateGrapple(p,input,map,dt,stunned){
     if(distance<1.6||distance>GRAPPLE.range+8||p.grapple.remaining<=0||rayWorld(origin,norm(delta),map,distance)<distance-.15)releaseGrapple(p);
   }
 }
-export function movePlayer(p, input, map, dt) {
+export function movePlayer(p, input, map, dt,playground={}) {
   const stunned=p.stun>0;p.stun=Math.max(0,(p.stun||0)-dt);
   if(stunned)input={...input,x:0,z:0,ads:false,sprint:false,crouch:false};
   p.yaw=input.yaw;p.pitch=input.pitch;p.ads=input.ads&&!isMelee(p.weapon)&&!WEAPONS[p.weapon].throwable;
@@ -126,7 +126,7 @@ export function movePlayer(p, input, map, dt) {
   else if(p.dash>0){p.dash=Math.max(0,p.dash-dt);}
   else if(p.slide>0){p.slide=Math.max(0,p.slide-dt);const drag=Math.exp(-.45*dt);p.v[0]*=drag;p.v[2]*=drag;}
   else {
-    const max=(p.ads?4.8:p.crouch?4:input.sprint?(WEAPONS[p.weapon].sprint||(isMelee(p.weapon)?13:11.3)):8)*(WEAPONS[p.weapon].moveScale||1);
+    const max=(p.ads?4.8:p.crouch?4:input.sprint?(WEAPONS[p.weapon].sprint||(isMelee(p.weapon)?13:11.3)):8)*(WEAPONS[p.weapon].moveScale||1)*(playground?.turbo?1.6:1);
     if((p.ground||p.ads)&&!p.grapple){
       const aligned=il>0&&(p.v[0]*dx+p.v[2]*dz)>speed*.8;
       const acc=p.ads?14:speed>max&&aligned?2.2:14,blend=1-Math.exp(-acc*dt);
@@ -142,7 +142,7 @@ export function movePlayer(p, input, map, dt) {
   }
   if(p.grapple){const dir=norm(p.grapple.anchor.map((v,i)=>v-p.p[i]-(i===1?eyeHeight(p):0)));for(let i=0;i<3;i++)p.v[i]+=dir[i]*GRAPPLE.pull*dt;p.v[1]=clamp(p.v[1],-24,24);}
   const cap=horizontalSpeed(p);if(cap>MOVEMENT.maxSpeed){p.v[0]*=MOVEMENT.maxSpeed/cap;p.v[2]*=MOVEMENT.maxSpeed/cap;}
-  const oldY=p.p[1];p.v[1]-=25*dt*(p.grapple?.35:1);
+  const oldY=p.p[1];p.v[1]-=25*dt*(p.grapple?.35:1)*(playground?.lowGravity?.32:1);
   // Substeps keep fast slides and knockbacks from tunneling through thin cover.
   const steps=Math.max(1,Math.ceil(horizontalSpeed(p)*dt/.25));
   for(let step=0;step<steps;step++){
@@ -260,7 +260,7 @@ export function stepMatch(m,inputs,dt=TICK){
       if(w.parry){p.parry=w.parry;emit(m,'guard',{player:p.id});}
       if(w.dash){const x=i.x,z=i.z||(!i.x?1:0),l=Math.hypot(x,z)||1;p.v[0]=(Math.cos(i.yaw)*x+Math.sin(i.yaw)*z)/l*24;p.v[2]=(Math.sin(i.yaw)*x-Math.cos(i.yaw)*z)/l*24;p.dash=w.dash;p.slide=0;emit(m,'dash',{player:p.id});}
     }
-    movePlayer(p,i,map,dt);p.cooldown=Math.max(0,p.cooldown-dt);if(p.cooldown<1e-7)p.cooldown=0;
+    movePlayer(p,i,map,dt,m.playground);p.cooldown=Math.max(0,p.cooldown-dt);if(p.cooldown<1e-7)p.cooldown=0;
     if(p.reload>0){p.reload-=dt;if(p.reload<=0){p.reload=0;p.ammo[p.weapon]=WEAPONS[p.weapon].ammo;}}
     p.spin=w.spinup&&i.fire&&p.reload<=0?Math.min(1,p.spin+dt/w.spinup):Math.max(0,p.spin-dt*3);
   }
@@ -372,4 +372,4 @@ export function stepHazards(m,map,dt){
     for(const p of m.players){const point=[p.p[0],p.p[1]+.4,p.p[2]];if(p.hp>0&&fireReaches(h,point,map))damagePlayer(m,p,h.owner,h.weapon,w.damage,false,point);}
   }
 }
-export function snapshot(m){return {map:m.map,phase:m.phase,clock:m.clock,round:m.round,winner:m.winner,roundWinner:m.roundWinner,players:m.players,projectiles:m.projectiles,hazards:m.hazards,time:m.time,events:m.events.slice(-48)};}
+export function snapshot(m){return {map:m.map,phase:m.phase,clock:m.clock,round:m.round,winner:m.winner,roundWinner:m.roundWinner,players:m.players,projectiles:m.projectiles,hazards:m.hazards,playground:m.playground||null,time:m.time,events:m.events.slice(-48)};}
