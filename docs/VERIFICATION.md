@@ -1,5 +1,13 @@
 # Verification
 
+## Version 1.9 training and grapple update
+
+- Syntax checks and all **96 tests passed** on October 1, 2026.
+- Grapple checks cover all 15 weapons, ray-selected anchors, actual pulling, momentum on release, cooldown, empty sky and range misses, forged fields, occlusion, thin-wall collision, speed limits, stun, death, reset and shooting while attached.
+- A real WebSocket input attaches to server-selected geometry. An HTTP observer receives the same anchor; stale input releases the tether and starts its cooldown.
+- Local drill tests produce real parry events, missed timing feedback, automatic retries, a speed-based clash win, a charging-trainer loss, and stun recovery. Practice stays non-scoring and does not issue coin events or account mutations.
+- Browser verification landed a parry with F on the visible cue, observed the success count and streak, checked pause/retry/leave, and switched the stun trainer to charging with T. Both practice HUDs and the grapple status rendered without overlap at 1280×720; warning/error logs were empty. Holding a grapple and moving through a complete match were covered by simulation/network checks rather than a manual mouse-and-keyboard playthrough.
+
 ## Version 1.8 momentum and search update
 
 - Syntax checks and all **86 tests passed** on October 1, 2026.
