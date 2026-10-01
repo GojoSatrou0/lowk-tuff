@@ -21,6 +21,10 @@ export const WEAPONS = [
   { name: 'Ember Flamethrower', short: 'FLAME', type: 'auto', ammo: 60, damage: 7, head: 1, rate: .09, reload: 2.4, range: 10, spread: 0, ads: 76, color: '#ff9b58', price: 375, model: 'flame', flame: true, cone: .2, description: 'A short-range cone of fire. Cover stops the flames; a timed katana parry blocks them.' },
   { name: 'Pocket Shorty', short: 'SHORTY', type: 'semi', ammo: 2, damage: 10, head: 1.15, pellets: 10, rate: .22, reload: 1.7, range: 18, spread: .105, ads: 72, color: '#e7c08d', price: 100, model: 'shorty', description: 'Two quick, wide pellet blasts. A compact finisher for close-range duels.' },
   { name: 'Rift Scythe', short: 'SCYTHE', type: 'semi', ammo: -1, damage: 60, head: 1, rate: .7, reload: 0, range: 4, spread: 0, ads: 85, color: '#d5acff', price: 325, model: 'scythe', sprint: 13, dash: .18, abilityCooldown: 2.8, description: 'Heavy, long-reaching swings. RMB / F dashes in your movement direction. Cuts through parries.' },
+  { name: 'Kestrel Crossbow', short: 'CROSSBOW', type: 'semi', ammo: 1, damage: 68, head: 1.6, rate: .9, reload: 1.35, range: 120, spread: 0, ads: 48, color: '#a6e5bd', price: 325, model: 'crossbow', projectile: 'bolt', speed: 72, gravity: 2.5, autoReload: true, recoil: .6, recoilDuration: .34, soundPitch: 390, description: 'A fast, low-drop bolt with no draw time. Automatically recocks after each shot. Katana can parry it.' },
+  { name: 'Sentinel DMR', short: 'MARKSMAN', type: 'semi', ammo: 12, damage: 36, head: 1.8, rate: .3, reload: 1.85, range: 130, spread: .025, ads: 48, color: '#8cc9ee', price: 250, model: 'marksman', recoil: 1.1, recoilDuration: .3, soundPitch: 105, description: 'A precise semi-auto rifle with a reflex sight. Tap for accurate follow-up shots at medium to long range.' },
+  { name: 'Whisper Pistol', short: 'SILENCED', type: 'semi', ammo: 14, damage: 22, head: 1.8, rate: .18, reload: 1.3, range: 65, spread: .018, ads: 62, color: '#d7a7cd', price: 125, model: 'silenced', suppressed: true, recoil: .5, recoilDuration: .2, soundPitch: 240, description: 'A quiet suppressed sidearm. Small muzzle flash, low recoil, and quick reloads; click once per shot.' },
+  { name: 'Impact Hammer', short: 'HAMMER', type: 'semi', ammo: -1, damage: 72, head: 1, rate: .9, reload: 0, range: 3.6, spread: 0, ads: 85, color: '#ffc676', price: 225, model: 'hammer', sprint: 11, knockback: 9, soundPitch: 160, description: 'A heavy swinging hammer that knocks rivals back. Breaks through katana guard and joins speed-based melee clashes.' },
 ];
 export const DEFAULT_LOADOUT = [0,1,2,3,4];
 export const isMelee = id => WEAPONS[id]?.ammo === -1;
@@ -212,7 +216,12 @@ export function resolveMelee(m,map,dt){
     if(p.hp<=0||p.stun>0||p.weapon!==p.swing.weapon){p.swing=null;continue;}
     p.swing.remaining-=dt;if(p.swing.remaining>1e-7)continue;
     const w=WEAPONS[p.swing.weapon],origin=[p.p[0],p.p[1]+eyeHeight(p),p.p[2]],hit=castShot(origin,forward(p.yaw,p.pitch),map,m.players,p.id,w.range);
-    p.swing=null;if(hit.target)damagePlayer(m,hit.target,p.id,p.weapon,w.damage,false,hit.p);
+    p.swing=null;if(hit.target&&damagePlayer(m,hit.target,p.id,p.weapon,w.damage,false,hit.p)&&w.knockback&&hit.target.hp>0){
+      const dx=hit.target.p[0]-p.p[0],dz=hit.target.p[2]-p.p[2],len=Math.hypot(dx,dz)||1;
+      hit.target.v[0]+=dx/len*w.knockback;hit.target.v[2]+=dz/len*w.knockback;
+      const speed=horizontalSpeed(hit.target);if(speed>MOVEMENT.maxSpeed){hit.target.v[0]*=MOVEMENT.maxSpeed/speed;hit.target.v[2]*=MOVEMENT.maxSpeed/speed;}
+      hit.target.v[1]=Math.max(hit.target.v[1],3);hit.target.ground=false;
+    }
   }
 }
 // All damage paths use this gate: rockets and every melee weapon bypass the guard.

@@ -8,8 +8,8 @@ function envelope(age,keys){
 }
 export function weaponMotion(id,age,{ads=0,reload=0,equipAge=10,reduced=false,shots=1}={}){
   const w=WEAPONS[id]||WEAPONS[0],melee=isMelee(id),motion=reduced?0:1;
-  const strength=[.8,.45,1.7,1.45,0,.9,1.1,.5,.25,1.65,0,.28,.15,1.35,0][id]||0;
-  const duration=[.24,.13,.78,.55,.42,.24,.4,.18,.25,.58,.35,.1,.17,.43,.55][id]||.3;
+  const strength=w.recoil??([.8,.45,1.7,1.45,0,.9,1.1,.5,.25,1.65,0,.28,.15,1.35,0][id]||0);
+  const duration=w.recoilDuration??([.24,.13,.78,.55,.42,.24,.4,.18,.25,.58,.35,.1,.17,.43,.55][id]||.3);
   const pulse=envelope(age,[[0,0],[duration*.055,1],[duration*.3,.32],[duration*.64,-.075],[duration,0]]);
   const kick=melee?0:pulse*strength*(1-clamp(finite(ads),0,1)*.45)*motion;
   const progress=reload>0&&w.reload?clamp(1-finite(reload)/w.reload,0,1):0;
@@ -45,7 +45,7 @@ export function paintSniperScope(element,presentation){
 // A shared attack event does not imply gunfire: melee only gets a swing and whoosh.
 export function attackEffects(id){
   const w=WEAPONS[id],melee=isMelee(id);
-  return {sound:melee?'swing':'shot',recoil:melee?0:1,muzzle:melee?0:.065,
+  return {sound:melee?'swing':'shot',recoil:melee?0:1,muzzle:melee||w.projectile?0:w.suppressed?.025:.065,
     tracer:!melee&&!w.projectile&&!w.flame,casings:!melee&&!w.projectile&&!w.flame,flame:!!w.flame};
 }
 

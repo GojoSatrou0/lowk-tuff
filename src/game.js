@@ -32,6 +32,10 @@ function gunSVG(index){
     12:'<path d="M14 22h29v39H14zM39 30h61v20H39zM96 34h46v12H96zM66 49h14v18H66z"/><path d="m146 40 10-15-1 11 9 4-10 11z" fill="#ff9b58"/>',
     13:'<path d="M29 25h104v11H29zM29 38h104v11H29zM24 25h22v26L32 69H12l17-26H9V25z"/><path d="M65 27h13v20H65z" fill="#e7c08d"/>',
     14:'<path d="M88 15h8v60h-8zM32 8h77l33 17 9 17-31-19H52L22 43z"/><path d="M91 38h12v8H84v-8z" fill="#d5acff"/>',
+    15:'<path d="M17 36h119v9H17zM30 44h29L48 68H29zM65 33l26-23 35-6-17 16-28 20 28 20 17 16-35-6-26-23z"/><path d="M126 5 94 40l32 35M48 40h103" fill="none" stroke="#a6e5bd" stroke-width="2"/>',
+    16:'<path d="M9 31h103v18H73l-8 19H50l5-22H9zM107 35h49v8h-49zM59 18h28v12H59zM86 30h23v4H86z"/><path d="M91 37h35v6H91z" fill="#8cc9ee"/>',
+    17:'<path d="M17 24h88v19H63L52 68H31l10-25H17zM99 28h52v13H99z"/><path d="M27 28h51v5H27z" fill="#d7a7cd"/>',
+    18:'<path d="M76 26h12v50H76zM30 8h104v29H30z"/><path d="M28 6h15v33H28zM121 6h15v33h-15zM74 56h16v8H74z" fill="#ffc676"/>',
   };
   if(art[index])return `<svg viewBox="0 0 165 80" fill="currentColor" aria-hidden="true">${art[index]}</svg>`;
   const base=index===4?'<path d="M25 38h34l73-23-11 25-62 9H25z"/><path d="M53 30v27h8V28z" fill="#ff9d77"/>':`<path d="M${index===2?8:20} 29h${index===2?90:70}v20H68l-8 21H47l4-23H25l-15-8z"/><path d="M90 32h${index===2?67:42}v8H90zM88 26h25v6H88z"/><path d="M58 24h24v6H58zM18 35H6v17h18z"/><path d="M53 34h30v4H53z" fill="${WEAPONS[index].color}"/>${index===2?'<path d="M55 14h42v9H55zM64 22h7v8h-7zM88 22h7v8h-7z"/>':''}`;
@@ -60,8 +64,8 @@ function sound(kind,weapon=0){
     const noise=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();noise.buffer=buffer;filter.type='bandpass';filter.Q.value=.65;filter.frequency.setValueAtTime(600,now);filter.frequency.exponentialRampToValueAtTime(2400,now+.08);filter.frequency.exponentialRampToValueAtTime(350,now+duration);
     gain.gain.setValueAtTime(.001,now);gain.gain.linearRampToValueAtTime(settings.volume*.22,now+.065);gain.gain.exponentialRampToValueAtTime(.001,now+duration);noise.connect(filter);filter.connect(gain);gain.connect(audio.destination);noise.start(now);noise.stop(now+duration);return;
   }
-  const now=audio.currentTime,gain=audio.createGain();gain.connect(audio.destination);gain.gain.setValueAtTime(settings.volume*(kind==='shot'?.15:.08),now);gain.gain.exponentialRampToValueAtTime(.001,now+(kind==='shot'?.13:.1));
-  const osc=audio.createOscillator();osc.type=kind==='shot'?'sawtooth':'sine';osc.frequency.setValueAtTime(kind==='hit'?1100:kind==='go'?650:kind==='reload'?270:kind==='coins'?1300:kind==='explosion'?45:kind==='parry'?1800:kind==='guard'?900:[130,180,65,75,320,150,95,230,430,55,550,85,55,110,380][weapon],now);osc.frequency.exponentialRampToValueAtTime(kind==='shot'||kind==='explosion'?35:450,now+.1);osc.connect(gain);osc.start(now);osc.stop(now+.14);
+  const now=audio.currentTime,gain=audio.createGain();gain.connect(audio.destination);gain.gain.setValueAtTime(settings.volume*(kind==='shot'?.15:.08)*(kind==='shot'&&WEAPONS[weapon]?.suppressed?.35:1),now);gain.gain.exponentialRampToValueAtTime(.001,now+(kind==='shot'?.13:.1));
+  const osc=audio.createOscillator();osc.type=kind==='shot'?'sawtooth':'sine';osc.frequency.setValueAtTime(kind==='hit'?1100:kind==='go'?650:kind==='reload'?270:kind==='coins'?1300:kind==='explosion'?45:kind==='parry'?1800:kind==='guard'?900:WEAPONS[weapon]?.soundPitch??[130,180,65,75,320,150,95,230,430,55,550,85,55,110,380][weapon]??180,now);osc.frequency.exponentialRampToValueAtTime(kind==='shot'||kind==='explosion'?35:450,now+.1);osc.connect(gain);osc.start(now);osc.stop(now+.14);
   if(kind==='shot'){const buffer=audio.createBuffer(1,audio.sampleRate*.1,audio.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);const src=audio.createBufferSource();src.buffer=buffer;src.connect(gain);src.start();}
 }
 function unlockAudio(){try{audio??=new AudioContext();audio.resume().catch(()=>{});}catch{}}
