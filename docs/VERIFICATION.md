@@ -1,5 +1,10 @@
 # Verification
 
+## Version 1.12.1 connection fix
+
+- All 132 tests pass, including direct socket configuration, authenticated cross-site connection from the configured frontend, rejection of other origins, unchanged cross-site account restrictions, socket ping/pong, HTTP fallback, reconnection, and protection from late responses or callbacks from old rooms.
+- The supplied recording showed 78–91 FPS alongside 421–1841 ms network latency. The Netlify build forced sequential HTTP input requests; at those delays the existing 250 ms input safety timeout and 500 ms solo pause timeout repeatedly stopped server movement. The fix uses a persistent socket and leaves the stale-input safety checks in place.
+
 ## Version 1.12 account grants and admin toys
 
 - All 127 tests pass. Added checks cover idempotent account-specific grants, console-command persistence, database restoration, unchanged coins/loadouts, invalid toy commands, target selection, movement prediction, role spoofing, host ownership, session matching, logout revocation, request cooldowns, reward suppression and HTTP/WebSocket replication.

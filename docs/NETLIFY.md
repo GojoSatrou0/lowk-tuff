@@ -2,7 +2,7 @@
 
 **Live as of October 1, 2026:** https://velocity-arena.netlify.app/ connects to the [Alwaysdata Free backend](https://mikudayo.alwaysdata.net/) and Neon Free database. Netlify production deploy: `6abe584b44b3fa36a92cac68`. Email accounts and two-player gameplay were verified through the public Netlify API. No card or paid service was used. See [Alwaysdata configuration](ALWAYSDATA.md).
 
-Netlify serves game files and proxies `/api` to one Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across server restarts. No paid disk is required. A production restart test confirmed that email login, purchased weapons, coins and loadout persist. Netlify uses HTTPS polling; the backend's direct address also supports secure WebSockets.
+Netlify serves game files and proxies `/api` to one Node service. Neon Free stores accounts, password hashes, hashed sessions, coins and loadouts across server restarts. No paid disk is required. Since 1.12.1, gameplay connects directly to the backend using secure WebSockets; HTTPS polling remains the fallback. This avoids waiting for a complete proxied HTTP round trip before sending each new movement input.
 
 ## Optional Render backend reference
 
@@ -34,7 +34,9 @@ The server refuses to start if the required database is missing. It waits for da
 
 For Git-connected Netlify, use build command `npm run build:netlify`, publish directory `dist`, and environment variable `ARENA_SERVER_URL`. No database credentials belong on Netlify.
 
-Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/) and polling gameplay. Opening the backend game URL directly enables WebSockets. Cookies remain HttpOnly, Secure and SameSite=Strict on each game origin. Both addresses reach the same backend; use the Netlify link consistently for a shared browser session.
+Netlify uses [HTTPS proxy rules](https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/) for accounts, room creation, purchases and HTTP fallback. The build writes a public `wss://` backend URL into `src/deployment.js`; it contains no credentials. A socket authenticates with the temporary room token after the same-origin API creates the room. Only the configured `PUBLIC_ORIGIN` and the server's own origin are accepted. Cross-site account POSTs remain rejected; cookies remain HttpOnly, Secure and SameSite=Strict. Use the Netlify link consistently for a shared browser session.
+
+The network indicator shows WebSocket or HTTPS polling, including in hosted solo. WebSocket latency is measured with ping/pong on that connection. Failed sockets fall back to polling and reconnect with a bounded delay; explicitly selecting HTTPS compatibility mode keeps polling. Late polling responses cannot replace newer socket snapshots. Free Play and training remain local and do not require either connection.
 
 ## Free-plan limits
 
