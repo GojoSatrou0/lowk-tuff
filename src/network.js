@@ -22,7 +22,7 @@ export class ArenaNetwork {
     this.nextSocketAttempt=this.now()+this.socketBackoff;this.socketBackoff=Math.min(this.socketBackoff*2,30000);
     let ws;try{ws=this.createSocket(this.socketUrl||`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/socket`);}catch{return;}
     this.ws=ws;const current=()=>this.ws===ws&&this.generation===generation&&this.token===token;
-    const timeout=setTimeout(()=>{if(current()&&this.transport!=='WebSocket')ws.close();},5000);
+    const timeout=setTimeout(()=>{if(current()&&this.transport!=='WebSocket')ws.close();},15000);
     ws.onopen=()=>{if(current())ws.send(JSON.stringify({token}));else ws.close();};
     ws.onmessage=e=>{if(!current())return;try{const s=JSON.parse(e.data);
       if(s.type==='snapshot'){clearTimeout(timeout);this.transport='WebSocket';this.socketBackoff=5000;this.lastReceive=this.now();this.failures=0;this.receive(s);}
