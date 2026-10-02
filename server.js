@@ -18,7 +18,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
   const maxRooms=100, ttl=15000;
   function rate(ip,kind,max,window){const key=`${kind}:${ip}`,now=Date.now();let r=limits.get(key);if(!r||now>r.until){r={n:0,until:now+window};limits.set(key,r);}return ++r.n<=max;}
   function response(res,status,data){res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));}
-  function safeOrigin(req){if(req.headers['sec-fetch-site']==='cross-site')return false;if(!req.headers.origin)return true;try{const origin=new URL(req.headers.origin);return origin.host===req.headers.host||(publicOrigin&&origin.origin===publicOrigin);}catch{return false;}}
+  function safeOrigin(req,{socket=false}={}){if(req.headers['sec-fetch-site']==='cross-site'&&!socket)return false;if(!req.headers.origin)return req.headers['sec-fetch-site']!=='cross-site';try{const origin=new URL(req.headers.origin);return origin.host===req.headers.host||(publicOrigin&&origin.origin===publicOrigin);}catch{return false;}}
   const fail=(message,status=400)=>Object.assign(new Error(message),{status});
   function cookieToken(req){return String(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('velocity_session='))?.slice('velocity_session='.length)||null;}
   function setCookie(res,token){res.setHeader('Set-Cookie',`velocity_session=${token||''}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${token?2592000:0}${secureCookies?'; Secure':''}`);}
@@ -118,7 +118,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     const url=new URL(req.url,'http://localhost'),ip=req.socket.remoteAddress;
     res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');
     try{
-      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:9,loadoutSlots:4,throwables:true,adminToys:true,release:'1.12.0',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
+      if(url.pathname==='/health'||url.pathname==='/api/status'){profiles.assertHealthy();response(res,200,{ok:true,name:'Velocity Arena',version:9,loadoutSlots:4,throwables:true,adminToys:true,release:'1.12.1',speedClashes:true,grapple:true,rooms:rooms.size,accounts:true,emailAccounts:true,storage:profileStore?'database':dataDir?'disk':'memory',transports:['websocket','https-polling']});return;}
       if(url.pathname==='/api'||url.pathname==='/api/auth'){
         if(req.method!=='POST'){response(res,405,{error:'Use POST'});return;}
         if(!safeOrigin(req)){response(res,403,{error:'Origin not allowed'});return;}
@@ -142,7 +142,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     }catch(err){res.removeHeader('Set-Cookie');response(res,err.status||(err.code==='ENOENT'?404:400),{error:err.message});}
   });
   const wss=new WebSocketServer({noServer:true,maxPayload:16384,perMessageDeflate:false});
-  server.on('upgrade',(req,socket,head)=>{if(req.url!=='/socket'||!safeOrigin(req)||!rate(req.socket.remoteAddress,'upgrade',25,60000)){socket.destroy();return;}wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,req));});
+  server.on('upgrade',(req,socket,head)=>{if(req.url!=='/socket'||!safeOrigin(req,{socket:true})||!rate(req.socket.remoteAddress,'upgrade',25,60000)){socket.destroy();return;}wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,req));});
   wss.on('connection',(ws,req)=>{
     let s=null;const authTimeout=setTimeout(()=>{if(!s)ws.close(1008,'Authentication required');},5000);authTimeout.unref();
     ws.on('message',raw=>{
@@ -151,6 +151,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
         if(!rate(req.socket.remoteAddress,'ws',180,1000)){ws.close(1008,'Rate limit');return;}
         const data=JSON.parse(raw);
         if(!s){s=session(data);s.socket?.close(1000,'Connection replaced');s.socket=ws;clearTimeout(authTimeout);if(profiles.settled)ws.send(JSON.stringify({type:'snapshot',...view(s)}));return;}
+        if(data.action==='ping'&&Number.isSafeInteger(data.id)&&data.id>=0){session({token:s.token});ws.send(JSON.stringify({type:'pong',id:data.id}));return;}
         // Socket identity comes from authentication, never from the input payload.
         if(data.action==='input'||data.action==='ready'||data.action==='poll')action({...data,token:s.token},req.socket.remoteAddress);
       }catch(err){ws.send(JSON.stringify({type:'error',error:err.message}));}

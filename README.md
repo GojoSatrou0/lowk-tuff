@@ -24,6 +24,8 @@ npm start
 
 ## What is included
 
+- **Connection fix (1.12.1):** Netlify gameplay uses a direct secure WebSocket to the game server, avoiding repeated proxy round trips that caused stop/start movement on high latency connections. HTTP remains the automatic or explicitly selected compatibility fallback. Socket reconnection, live connection ping and stale-update protection are included.
+
 - **Admin toys (1.12):** Admin hosts can enable moon gravity, turbo movement, big heads, launches, brief freezes and confetti in their own private/solo rooms. Toys disable coin rewards for that room. Access uses a server-verified account role; no name-based or client-side grants. See [admin setup and controls](docs/ADMIN.md).
 - **Four-slot update (1.11):** Slot 1 primary, slot 2 secondary, slot 3 melee, slot 4 utility. Free Sidekick Pistol and Frag Grenade; Molotov costs 100 coins. Grenades bounce with a 2.1-second fuse (two per round); Molotovs break into 5.5-second fire patches (one per round). Left-click to throw. R cannot refill throwables; rounds and the Free Play reset refill them. Katana parries both; fire and explosions respect cover and can hurt their owner. Grapple stays on Q. Saved wallets migrate automatically, preserving purchases, coins and accounts.
 - **Arsenal update (1.10):** Kestrel Crossbow (325 coins), Sentinel DMR (250), Whisper Pistol (125), and Impact Hammer (225). The crossbow fires a fast bolt without drawing and automatically recocks; the DMR and suppressed pistol fire once per click; the hammer knocks back surviving targets and participates in speed clashes. Each has an armory icon, first-person model and firing animation. Katana parries the three new ranged weapons; the hammer bypasses its guard.
