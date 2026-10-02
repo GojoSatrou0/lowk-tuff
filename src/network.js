@@ -23,9 +23,11 @@ export class ArenaNetwork {
     let ws;try{ws=this.createSocket(this.socketUrl||`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}/socket`);}catch{return;}
     this.ws=ws;const current=()=>this.ws===ws&&this.generation===generation&&this.token===token;
     const timeout=setTimeout(()=>{if(current()&&this.transport!=='WebSocket')ws.close();},15000);
-    ws.onopen=()=>{if(current())ws.send(JSON.stringify({token}));else ws.close();};
+    ws.onopen=()=>{if(current())ws.send(JSON.stringify({token,snapshotAck:true}));else ws.close();};
     ws.onmessage=e=>{if(!current())return;try{const s=JSON.parse(e.data);
-      if(s.type==='snapshot'){clearTimeout(timeout);this.transport='WebSocket';this.socketBackoff=5000;this.lastReceive=this.now();this.failures=0;this.receive(s);}
+      if(s.type==='snapshot'){clearTimeout(timeout);this.transport='WebSocket';this.socketBackoff=5000;this.lastReceive=this.now();this.failures=0;
+        if(Number.isSafeInteger(s.ackId)&&s.ackId>0)ws.send(JSON.stringify({action:'ack',id:s.ackId}));
+        this.receive(s);}
       else if(s.type==='pong'&&s.id===this.pendingPing?.id){this.ping=Math.round(this.now()-this.pendingPing.at);this.pendingPing=null;}
       else if(s.type==='error')this.onError(s.error);
     }catch{this.onError('The server returned an invalid update.');}};
