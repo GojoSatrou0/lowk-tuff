@@ -2,7 +2,8 @@
 
 ## Version 1.12.1 connection fix
 
-- All 132 tests pass, including direct socket configuration, authenticated cross-site connection from the configured frontend, rejection of other origins, unchanged cross-site account restrictions, socket ping/pong, HTTP fallback, reconnection, and protection from late responses or callbacks from old rooms.
+- All 135 tests pass, including direct socket configuration, authenticated cross-site connection from the configured frontend, rejection of other origins, unchanged cross-site account restrictions, socket ping/pong, HTTP fallback, reconnection, slow secure socket setup, bounded outstanding frames, compatibility with older clients, and protection from late responses or callbacks from old rooms. Socket setup has a 15-second deadline; the server's existing 5-second token-authentication limit remains unchanged.
+- New clients acknowledge received snapshots. The server permits at most three outstanding frames, then sends current state after an acknowledgment instead of accumulating old snapshots in the hosting proxy. This limits queued traffic; it cannot eliminate physical network latency or packet loss.
 - The supplied recording showed 78–91 FPS alongside 421–1841 ms network latency. The Netlify build forced sequential HTTP input requests; at those delays the existing 250 ms input safety timeout and 500 ms solo pause timeout repeatedly stopped server movement. The fix uses a persistent socket and leaves the stale-input safety checks in place.
 
 ## Version 1.12 account grants and admin toys
