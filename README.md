@@ -24,7 +24,7 @@ npm start
 
 ## What is included
 
-- **Connection fix (1.12.1):** Netlify gameplay uses a direct secure WebSocket to the game server, avoiding repeated proxy round trips that caused stop/start movement on high latency connections. HTTP remains the automatic or explicitly selected compatibility fallback. Socket reconnection, live connection ping and stale-update protection are included.
+- **Connection fix (1.12.1):** Netlify gameplay uses a direct secure WebSocket to the game server, avoiding repeated proxy round trips that caused stop/start movement on high latency connections. HTTP remains the automatic or explicitly selected compatibility fallback. Socket reconnection, live connection ping and stale-update protection are included. Received updates are acknowledged; at most three can be outstanding, preventing a slow connection from accumulating a long queue of old positions. Secure socket setup has a 15-second connection window.
 
 - **Admin toys (1.12):** Admin hosts can enable moon gravity, turbo movement, big heads, launches, brief freezes and confetti in their own private/solo rooms. Toys disable coin rewards for that room. Access uses a server-verified account role; no name-based or client-side grants. See [admin setup and controls](docs/ADMIN.md).
 - **Four-slot update (1.11):** Slot 1 primary, slot 2 secondary, slot 3 melee, slot 4 utility. Free Sidekick Pistol and Frag Grenade; Molotov costs 100 coins. Grenades bounce with a 2.1-second fuse (two per round); Molotovs break into 5.5-second fire patches (one per round). Left-click to throw. R cannot refill throwables; rounds and the Free Play reset refill them. Katana parries both; fire and explosions respect cover and can hurt their owner. Grapple stays on Q. Saved wallets migrate automatically, preserving purchases, coins and accounts.
@@ -177,7 +177,7 @@ npm test
 | `profile-store.js` | Server-only account, session, and wallet persistence |
 | `src/accounts.js` | Registration, sign-in, sign-out, and account UI |
 | `src/bot.js` | Solo pathfinding and opponent behavior |
-| `server.js` | HTTP/static server, sessions, rooms, 60 Hz simulation, 20 Hz WS snapshots |
+| `server.js` | HTTP/static server, sessions, rooms, 60 Hz simulation, up to 20 Hz WS snapshots |
 | `tests/` | Rules and real HTTP/WebSocket integration checks |
 | `starter/` | Original files and supplied GLB, preserved unchanged |
 

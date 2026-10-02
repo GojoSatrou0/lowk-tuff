@@ -142,6 +142,14 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
     }catch(err){res.removeHeader('Set-Cookie');response(res,err.status||(err.code==='ENOENT'?404:400),{error:err.message});}
   });
   const wss=new WebSocketServer({noServer:true,maxPayload:16384,perMessageDeflate:false});
+  function sendSnapshot(s){
+    const ws=s.socket;if(ws?.readyState!==WebSocket.OPEN||ws.bufferedAmount>=65536||!profiles.settled)return;
+    // TCP buffer size cannot see queues in a hosting proxy. Wait for receipt
+    // acknowledgments, then serialize current state instead of storing old frames.
+    const stream=ws.snapshotStream;if(stream?.pending.size>=3)return;
+    const ackId=stream?++stream.seq:undefined;if(stream)stream.pending.add(ackId);
+    ws.send(JSON.stringify({type:'snapshot',...view(s),...(stream?{ackId}:{})}));
+  }
   server.on('upgrade',(req,socket,head)=>{if(req.url!=='/socket'||!safeOrigin(req,{socket:true})||!rate(req.socket.remoteAddress,'upgrade',25,60000)){socket.destroy();return;}wss.handleUpgrade(req,socket,head,ws=>wss.emit('connection',ws,req));});
   wss.on('connection',(ws,req)=>{
     let s=null;const authTimeout=setTimeout(()=>{if(!s)ws.close(1008,'Authentication required');},5000);authTimeout.unref();
@@ -150,7 +158,8 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
         profiles.assertHealthy();
         if(!rate(req.socket.remoteAddress,'ws',180,1000)){ws.close(1008,'Rate limit');return;}
         const data=JSON.parse(raw);
-        if(!s){s=session(data);s.socket?.close(1000,'Connection replaced');s.socket=ws;clearTimeout(authTimeout);if(profiles.settled)ws.send(JSON.stringify({type:'snapshot',...view(s)}));return;}
+        if(!s){s=session(data);s.socket?.close(1000,'Connection replaced');s.socket=ws;ws.snapshotStream=data.snapshotAck===true?{seq:0,pending:new Set()}:null;clearTimeout(authTimeout);sendSnapshot(s);return;}
+        if(data.action==='ack'&&ws.snapshotStream?.pending.has(data.id)){session({token:s.token});ws.snapshotStream.pending.delete(data.id);return;}
         if(data.action==='ping'&&Number.isSafeInteger(data.id)&&data.id>=0){session({token:s.token});ws.send(JSON.stringify({type:'pong',id:data.id}));return;}
         // Socket identity comes from authentication, never from the input payload.
         if(data.action==='input'||data.action==='ready'||data.action==='poll')action({...data,token:s.token},req.socket.remoteAddress);
@@ -176,7 +185,7 @@ export function createArenaServer({port=Number(process.env.PORT)||3000,host=proc
           const profile=profiles.rewardById(profileId,amount);if(profile)emit(r.match,'coins',{player:id,amount,balance:profile.coins,reason:event.type==='matchEnd'?'MATCH COMPLETE':'ROUND COMPLETE'});
         }
       }acc-=TICK;ticks++;
-      if(ticks%3===0&&profiles.settled)for(const s of sessions.values())if(s.socket?.readyState===WebSocket.OPEN&&s.socket.bufferedAmount<65536)s.socket.send(JSON.stringify({type:'snapshot',...view(s)}));
+      if(ticks%3===0&&profiles.settled)for(const s of sessions.values())sendSnapshot(s);
     }
     if(ticks%60<2){for(const s of sessions.values())if(Date.now()-s.seen>ttl||(s.authSession&&!profiles.sessionActive(s.authSession)))leave(s);for(const [key,v]of limits)if(Date.now()>v.until)limits.delete(key);}
   },8);timer.unref();
