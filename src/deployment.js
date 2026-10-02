@@ -1,2 +1,3 @@
-// The Netlify build sets this to true because gameplay goes through its HTTPS proxy.
+// Netlify supplies the public backend socket URL. Account requests stay same-origin.
 export const FORCE_HTTP=false;
+export const SOCKET_URL='';
