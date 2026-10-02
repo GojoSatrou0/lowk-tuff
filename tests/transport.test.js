@@ -7,6 +7,11 @@ test('direct socket authenticates with the room token, sends continuous input an
   const f=fixture(t);f.net.openSocket();const ws=f.sockets[0];assert.equal(ws.url,'wss://backend.example/socket');ws.open();assert.deepEqual(ws.sent[0],{token:'private-room-token'});ws.message({type:'snapshot',time:1});
   f.net.request=()=>{throw Error('WebSocket gameplay must not poll HTTP');};await f.net.send();assert(ws.sent.some(x=>x.action==='input'));const ping=ws.sent.find(x=>x.action==='ping');f.advance(92);ws.message({type:'pong',id:ping.id});assert.equal(f.net.ping,92);assert.equal(f.errors.length,0);
 });
+test('slow secure socket setup has fifteen seconds to connect, while an unresponsive attempt still expires',t=>{
+  t.mock.timers.enable({apis:['setTimeout']});const f=fixture(t);f.net.openSocket();const slow=f.sockets[0];
+  t.mock.timers.tick(6000);assert.equal(slow.readyState,0);slow.open();slow.message({type:'snapshot',time:1});t.mock.timers.tick(15000);assert.equal(slow.readyState,1);assert.equal(f.net.transport,'WebSocket');
+  slow.close();f.net.openSocket();const stalled=f.sockets[1];t.mock.timers.tick(14999);assert.equal(stalled.readyState,0);t.mock.timers.tick(1);assert.equal(stalled.readyState,3);assert.equal(f.net.transport,'HTTPS polling');
+});
 test('late polling data and errors cannot rewind or disconnect a recovered WebSocket session',async t=>{
   const f=fixture(t);let resolve;f.net.request=()=>new Promise(r=>{resolve=r;});const polling=f.net.send(),ws=f.sockets[0];ws.open();ws.message({type:'snapshot',time:10});resolve({time:2});await polling;assert.deepEqual(f.snapshots.map(s=>s.time),[10]);
   ws.close();f.advance(31000);let reject;f.net.request=()=>new Promise((_,r)=>{reject=r;});const failing=f.net.send(),recovered=f.sockets[1];recovered.open();recovered.message({type:'snapshot',time:11});reject(Object.assign(Error('old session expired'),{status:410}));await failing;assert.equal(f.net.transport,'WebSocket');assert(f.net.token);assert.equal(f.errors.length,0);
